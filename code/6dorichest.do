@@ -112,18 +112,18 @@ keep  country mnninc_pasty_ppp_eur_pc npopul mnnfin_ratio mnninc_mer_ppp top10 m
 merge m:1 country using "$work_data/import-core-country-codes-output.dta", nogen keep(master match) keepusing(shortname)
 drop country 
 order shortname
-rename shortname country_all
+rename shortname country
 
 *Merge with Part 1
 merge 1:1 top10 using "`top10_poorest_all'"
 drop _merge
-order top10 country_all mnninc_pasty_ppp_eur_pc_all npopul_all mnnfin_ratio_all mnninc_mer_ppp_all mnninc_pasty_ppp_eur_pc npopul mnnfin_ratio mnninc_mer_ppp_ratio mnwnxa_ratio_all mnwnxa_ratio
-keep top10 country_all mnninc_pasty_ppp_eur_pc_all npopul_all mnnfin_ratio_all mnninc_mer_ppp_all mnninc_pasty_ppp_eur_pc npopul mnnfin_ratio mnninc_mer_ppp_ratio mnwnxa_ratio_all mnwnxa_ratio
+order top10 country_all mnninc_pasty_ppp_eur_pc_all npopul_all mnnfin_ratio_all mnninc_mer_ppp_all country mnninc_pasty_ppp_eur_pc npopul mnnfin_ratio mnninc_mer_ppp_ratio mnwnxa_ratio_all mnwnxa_ratio
+keep top10 country_all mnninc_pasty_ppp_eur_pc_all npopul_all mnnfin_ratio_all mnninc_mer_ppp_all country mnninc_pasty_ppp_eur_pc npopul mnnfin_ratio mnninc_mer_ppp_ratio mnwnxa_ratio_all mnwnxa_ratio
 
 
 *Export to excel
 *export excel using "$output", sheet("DataT9", modify) cell(B5) keepcellfmt
-export excel using "$output", sheet("DataT11", modify) cell(B5) keepcellfmt
+export excel using "$output", sheet("DataT12", modify) cell(B5) keepcellfmt
 
 
 
@@ -183,10 +183,10 @@ merge m:1 country using "$work_data/import-core-country-codes-output.dta", nogen
 drop country 
 order shortname
 rename shortname country
- sort mnninc_pasty_ppp_eur
+gsort -mnninc_pasty_ppp_eur
 
 *export excel using "$output", sheet("DataT10", modify) cell(B5) keepcellfmt
-export excel using "$output", sheet("DataT12", modify) cell(B5) keepcellfmt
+export excel using "$output", sheet("DataT13", modify) cell(B5) keepcellfmt
 
 
 

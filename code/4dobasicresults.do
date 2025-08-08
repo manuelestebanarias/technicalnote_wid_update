@@ -4,10 +4,13 @@ forv x=1/10 {
 	save    `temp_reg`x'', emptyok
 }
 
-
 clear all
 tempfile temp_asi
 save    `temp_asi', emptyok
+
+clear all
+tempfile temp_asi2
+save    `temp_asi2', emptyok
 	
 **# Figure 0a
 /*------------------------------------------------------------------------------
@@ -74,7 +77,7 @@ Figure 0d. Exchange rate and purchasing power parity: euro/yen
 Figure 1. Per Capita National Income by World Region 1800-2023
 ------------------------------------------------------------------------------*/
 use "$work_data/coreterritories_dataset.dta",clear
-keep country year mnninc ppp_usd npopul 
+keep country year mnninc ppp_eur npopul 
 
 replace mnninc=mnninc/ppp
 replace mnninc= mnninc/npopul
@@ -156,7 +159,7 @@ collapse (sum) npopul mnninc_pasty_ppp_eur mnninc_mer_eur mnninc_pasty_ppp_eur_s
 
 *Format for Excel
 foreach v in pasty_ppp_eur mer_eur pasty_ppp_usd mer_usd {
-	replace mnninc_`v' = mnninc_`v' /100000000
+	replace mnninc_`v' = mnninc_`v' /1000000000
 }
 
 
@@ -231,7 +234,7 @@ collapse (sum) npopul mgdpro_pasty_ppp_eur mgdpro_mer_eur mgdpro_pasty_ppp_eur_s
 
 *Format for Excel
 foreach v in pasty_ppp_eur mer_eur pasty_ppp_usd mer_usd {
-	replace mgdpro_`v' = mgdpro_`v' /100000000
+	replace mgdpro_`v' = mgdpro_`v' /1000000000
 }
 
 
@@ -281,7 +284,7 @@ keep  shortname mgdpro_pc_pasty_ppp_eur mgdpro_pc_pasty_ppp_eur_sh mgdpro_pc_mer
 order shortname mgdpro_pc_pasty_ppp_eur mgdpro_pc_pasty_ppp_eur_sh mgdpro_pc_mer_eur mgdpro_pc_mer_eur_sh mgdpro_pc_pasty_ppp_usd mgdpro_pc_pasty_ppp_usd_sh mgdpro_pc_mer_usd mgdpro_pc_mer_usd_sh
 
 *export excel using "$output", sheet("DataT1_GDPaveragePPPMER", modify) cell(B5) keepcellfmt 
-export excel using "$output", sheet("DataT3_a", modify) cell(B5) keepcellfmt 
+export excel using "$output", sheet("DataT3a", modify) cell(B5) keepcellfmt 
 
 
 
@@ -754,9 +757,7 @@ export excel using "$output", sheet("DataT5d", modify) cell(B5) keepcellfmt
 /*------------------------------------------------------------------------------
 Table 2. Per capita national income growth for Regions (1980-2023)
 ------------------------------------------------------------------------------*/
-clear all
-tempfile temp_asi
-save    `temp_asi', emptyok
+
 use "$work_data/coreterritories_dataset.dta", clear
 levelsof region1, local(regiones)
 
@@ -784,7 +785,7 @@ foreach r of local regiones {
 			loc tf=r(mean)
 			sum mnninc_pc_pasty_ppp`c' if year==1980
 			loc ti=r(mean)
-			sum mnninc_pc_pasty_ppp`c' if year==1900
+			sum mnninc_pc_pasty_ppp`c' if year==1800
 			loc to=r(mean)
 
 			tsset year
@@ -798,17 +799,21 @@ foreach r of local regiones {
 			loc growth1980_2000=r(mean)
 			sum annual_growth if inrange(year,2000,$pastyear )
 			loc growth2000_$pastyear =r(mean)
+			sum annual_growth if inrange(year,2019,$pastyear )
+			loc growth2019_$pastyear =r(mean)
 
 				
 			gen region="`c'"
+			gen mnninc_pc_pasty_ppppc1800=`to'
 			gen mnninc_pc_pasty_ppppc1980=`ti'
 			gen mnninc_pc_pasty_ppppc$pastyear =`tf'
 			gen growth1800_$pastyear = `growth1800_$pastyear'
 			gen growth1980_$pastyear =`growth1980_$pastyear'
 			gen growth1980_2000=`growth1980_2000'
 			gen growth2000_$pastyear =`growth2000_$pastyear'
-
-			keep region mnninc_pc_pasty_ppppc1980 mnninc_pc_pasty_ppppc$pastyear  growth1800_$pastyear growth1980_$pastyear growth1980_2000 growth2000_$pastyear 
+			gen growth2019_$pastyear =`growth2019_$pastyear '
+	
+			keep region mnninc_pc_pasty_ppppc1800 mnninc_pc_pasty_ppppc1980 mnninc_pc_pasty_ppppc$pastyear  growth1800_$pastyear growth1980_$pastyear growth1980_2000 growth2000_$pastyear growth2019_$pastyear
 			duplicates drop
 				
 			append using "`temp_`r''"
@@ -850,8 +855,8 @@ foreach r of local regiones {
 	
 	merge m:1 region1 using "$work_data/import-region-codes-output.dta", nogen keep(match master) keepusing(shortname order)
 	rename shortname regionname
-	order  regionname countryname mnninc_pc_pasty_ppppc1980 mnninc_pc_pasty_ppppc$pastyear growth1800_$pastyear growth1980_$pastyear growth1980_2000 growth2000_$pastyear 
-	keep regionname countryname mnninc_pc_pasty_ppppc1980 mnninc_pc_pasty_ppppc$pastyear  growth1800_$pastyear  growth1980_$pastyear growth1980_2000 growth2000_$pastyear   order
+	order  regionname countryname mnninc_pc_pasty_ppppc1800 mnninc_pc_pasty_ppppc1980 mnninc_pc_pasty_ppppc$pastyear growth1800_$pastyear growth1980_$pastyear growth1980_2000 growth2000_$pastyear growth2019_$pastyear
+	keep regionname countryname mnninc_pc_pasty_ppppc1800 mnninc_pc_pasty_ppppc1980 mnninc_pc_pasty_ppppc$pastyear  growth1800_$pastyear  growth1980_$pastyear growth1980_2000 growth2000_$pastyear growth2019_$pastyear  order
 	
 	
 	
@@ -863,7 +868,7 @@ foreach r of local regiones {
 u "`temp_asi'", clear
 gsort order  -mnninc_pc_pasty_ppppc$pastyear
 drop order
-export excel using "$output", sheet("T6", modify) cell(B5) keepcellfmt 
+export excel using "$output", sheet("DataT6", modify) cell(B5) keepcellfmt 
 
 
 **# Table 3
@@ -1015,7 +1020,7 @@ export excel using "$output", sheet("DataT8", modify) cell(B5) keepcellfmt
 	
 **# Table 5 EUR PPP 
 /*------------------------------------------------------------------------------
-Table 5. Price index growth by world regions (1980-2023) USD MER
+Table 5. Price index growth by world regions (1980-2023) EUR PPP
 ------------------------------------------------------------------------------*/
 	
 use "$work_data/coreterritories_dataset.dta",clear
@@ -1085,7 +1090,7 @@ export excel using "$output", sheet("DataT9a", modify) cell(B5) keepcellfmt
 	
 **# Table 5 USD PPP 
 /*------------------------------------------------------------------------------
-Table 5. Price index growth by world regions (1980-2023) USD MER
+Table 5. Price index growth by world regions (1980-2023) USD PPP
 ------------------------------------------------------------------------------*/
 	
 use "$work_data/coreterritories_dataset.dta",clear
@@ -1156,7 +1161,7 @@ export excel using "$output", sheet("DataT9b", modify) cell(B5) keepcellfmt
 
 **# Table 5 EUR MER 
 /*------------------------------------------------------------------------------
-Table 5. Price index growth by world regions (1980-2023) USD MER
+Table 5. Price index growth by world regions (1980-2023) EUR MER
 ------------------------------------------------------------------------------*/
 	
 use "$work_data/coreterritories_dataset.dta",clear
@@ -1292,3 +1297,119 @@ order shortname
 
 *Export
 export excel using "$output", sheet("DataT9d", modify) cell(B5) keepcellfmt
+
+
+
+**# Table 5 Continents
+/*------------------------------------------------------------------------------
+Table 5. Price index growth by world regions (1980-2023) USD MER
+------------------------------------------------------------------------------*/
+
+use "$work_data/coreterritories_dataset.dta", clear
+levelsof region1, local(regiones)
+
+foreach r of local regiones {
+	clear all
+	
+	tempfile temp_`r'
+	save    `temp_`r'', emptyok
+	
+	use "$work_data/coreterritories_dataset.dta", clear
+	
+	keep if (region1=="`r'")
+	keep country region1 inyusx year
+	levelsof country, local(countries)
+		
+	reshape wide inyusx, i(year) j(country) string
+		
+	*Compute
+	foreach c of local countries {
+		preserve
+			keep year inyusx`c'
+			sum inyusx`c' if year==$pastyear
+			loc tf=r(mean)
+			sum inyusx`c' if year==1980
+			loc ti=r(mean)
+			sum inyusx`c' if year==1800
+			loc to=r(mean)
+
+			tsset year
+			g annual_growth=100*(inyusx`c'/L.inyusx`c'-1)
+
+			sum annual_growth if inrange(year,1800,$pastyear )
+			loc growth1800_$pastyear =r(mean)
+			sum annual_growth if inrange(year,1980,$pastyear )
+			loc growth1980_$pastyear =r(mean)
+			sum annual_growth if inrange(year,1980,2000)
+			loc growth1980_2000=r(mean)
+			sum annual_growth if inrange(year,2000,$pastyear )
+			loc growth2000_$pastyear =r(mean)
+			sum annual_growth if inrange(year,2019,$pastyear )
+			loc growth2019_$pastyear =r(mean)
+				
+			gen region="`c'"
+			gen inyusx1800=`to'
+			gen inyusx1980=`ti'
+			gen inyusx$pastyear =`tf'
+			gen growth1800_$pastyear = `growth1800_$pastyear'
+			gen growth1980_$pastyear =`growth1980_$pastyear'
+			gen growth1980_2000=`growth1980_2000'
+			gen growth2000_$pastyear =`growth2000_$pastyear'
+			gen growth2019_$pastyear =`growth2019_$pastyear '
+			
+			keep region inyusx1800 inyusx1980 inyusx$pastyear  growth1800_$pastyear growth1980_$pastyear growth1980_2000 growth2000_$pastyear growth2019_$pastyear
+			duplicates drop
+				
+			append using "`temp_`r''"
+			save`temp_`r'', replace
+		restore
+		}
+	*Append in exporting format
+	use  "`temp_`r''", clear
+
+	ren region country
+	merge m:1 country using "$work_data/import-core-country-codes-output.dta", nogen keep(master match) keepusing(shortname region1)
+	
+	replace region1="XR" if missing(region1) & country=="OA"
+	replace region1="QL" if missing(region1) & country=="OB"
+	replace region1="QE" if missing(region1) & country=="OC"
+	replace region1="XL" if missing(region1) & country=="OD"
+	replace region1="XN" if missing(region1) & country=="OE"
+	replace region1="XB" if missing(region1) & country=="OH"
+	replace region1="XS" if missing(region1) & country=="OI"
+	replace region1="XF" if missing(region1) & country=="OJ"
+	replace region1="XB" if missing(region1) & country=="OK"
+	replace region1="XB" if missing(region1) & country=="OL"
+	replace region1="QE" if missing(region1) & country=="QM"
+	replace region1="WO" if missing(region1) & country=="WO"
+	
+	replace shortname="Other Russia & Central Asia"	 	if missing(shortname) & country=="OA"
+	replace shortname="Other East Asia" 				if missing(shortname) & country=="OB"
+	replace shortname="Other Western Europe" 			if missing(shortname) & country=="OC"
+	replace shortname="Other Latin America" 			if missing(shortname) & country=="OD"
+	replace shortname="Other MENA" 						if missing(shortname) & country=="OE"
+	replace shortname="Other North America & Oceania" 	if missing(shortname) & country=="OH"
+	replace shortname="Other South & South-East Asia" 	if missing(shortname) & country=="OI"
+	replace shortname="Other Sub-Saharan Africa" 		if missing(shortname) & country=="OJ"
+	replace shortname="Other North America" 			if missing(shortname) & country=="OK"
+	replace shortname="Other Oceania" 					if missing(shortname) & country=="OL"
+	replace shortname="Eastern Europe" 					if missing(shortname) & country=="QM"
+	replace shortname="World" 							if missing(shortname) & country=="WO"
+	rename shortname countryname
+	
+	merge m:1 region1 using "$work_data/import-region-codes-output.dta", nogen keep(match master) keepusing(shortname order)
+	rename shortname regionname
+	order  regionname countryname inyusx1800 inyusx1980 inyusx$pastyear growth1800_$pastyear growth1980_$pastyear growth1980_2000 growth2000_$pastyear growth2019_$pastyear
+	keep regionname countryname inyusx1800 inyusx1980 inyusx$pastyear  growth1800_$pastyear  growth1980_$pastyear growth1980_2000 growth2000_$pastyear growth2019_$pastyear order
+	
+	
+	
+	append using "`temp_asi2'"
+	save "`temp_asi2'", replace
+	*export excel using "$output", sheet("T2_`r'", modify) cell(B5) keepcellfmt 
+ }
+
+u "`temp_asi2'", clear
+gsort order  -inyusx$pastyear
+drop order
+export excel using "$output", sheet("DataT10", modify) cell(B5) keepcellfmt 

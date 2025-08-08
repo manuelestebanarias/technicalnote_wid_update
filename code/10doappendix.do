@@ -68,7 +68,7 @@ g mpinnx_ppp_pasty_usd=(/*nipi**/mpinnx)/ppp_usd
 order countryname mnninc_pasty_ppp_eur_pc percentile region1   mnninc_pasty_ppp_eur npopul country mnnfin_pasty_ppp_usd mpinnx_ppp_pasty_usd mcomnx_ppp_pasty_usd mnwnxa_pasty_ppp_usd /// 
 mndpro_pasty_ppp_usd mgdpro_pasty_ppp_usd 	PPP_to_MER_pasty_EUR PPP_to_MER_pasty_USD PPP_to_MER_2021_EUR PPP_to_MER_2021_USD	
 
-keep countryname mnninc_pasty_ppp_eur_pc percentile region1   mnninc_pasty_ppp_eur npopul country mnnfin_pasty_ppp_usd mpinnx_ppp_pasty_usd mcomnx_ppp_pasty_usd mnwnxa_pasty_ppp_usd /// 
+keep countryname mnninc_pasty_ppp_eur_pc percentile region1   mnninc_pasty_ppp_eur npopul country mnnfin_pasty_ppp_usd mpinnx_ppp_pasty_usd mcomnx_ppp_pasty_usd mnwnxa_pasty_ppp_usd ///
 mndpro_pasty_ppp_usd mgdpro_pasty_ppp_usd 	PPP_to_MER_pasty_EUR PPP_to_MER_pasty_USD PPP_to_MER_2021_EUR PPP_to_MER_2021_USD
 
 

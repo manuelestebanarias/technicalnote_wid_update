@@ -755,13 +755,13 @@ rename shortname country
 *Merge with Part 1
 merge 1:1 top10 using "`top10_richest_all'"
 drop _merge
-order top10 country mnninc_pasty_ppp_eur_pc_all npopul_all mnnfin_ratio_all mnninc_mer_ppp_all mnninc_pasty_ppp_eur_pc npopul mnnfin_ratio mnninc_mer_ppp_ratio mnwnxa_ratio_all mnwnxa_ratio
-keep top10 country mnninc_pasty_ppp_eur_pc_all npopul_all mnnfin_ratio_all mnninc_mer_ppp_all mnninc_pasty_ppp_eur_pc npopul mnnfin_ratio mnninc_mer_ppp_ratio mnwnxa_ratio_all mnwnxa_ratio
-
+order top10 country_all mnninc_pasty_ppp_eur_pc_all npopul_all mnnfin_ratio_all mnninc_mer_ppp_all country mnninc_pasty_ppp_eur_pc npopul mnnfin_ratio mnninc_mer_ppp_ratio mnwnxa_ratio_all mnwnxa_ratio
+keep  top10 country_all mnninc_pasty_ppp_eur_pc_all npopul_all mnnfin_ratio_all mnninc_mer_ppp_all country mnninc_pasty_ppp_eur_pc npopul mnnfin_ratio mnninc_mer_ppp_ratio mnwnxa_ratio_all mnwnxa_ratio
+sort top10
 
 *Export to excel
 *export excel using "$output", sheet("DataT8", modify) cell(B5) keepcellfmt		
-export excel using "$output", sheet("DataT10", modify) cell(B5) keepcellfmt		
+export excel using "$output", sheet("DataT11", modify) cell(B5) keepcellfmt		
 
 
 
