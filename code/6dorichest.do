@@ -10,7 +10,9 @@ Table 9. Bottom 10 Poorest Countries ($pastyear)
 use "$work_data/main_dataset.dta",clear
 keep if year==$pastyear
 drop if country=="WO"
-
+//----------------------------------
+drop if country=="ZW"
+//----------------------------------
 gen mnnfin_pasty_ppp 	= mnnfin / ppp_eur
 gen mnwnxa_pasty_ppp 	= mnwnxa / ppp_eur
 gen mndpro_pasty_ppp 	= mndpro / ppp_eur
@@ -39,7 +41,7 @@ replace percentile="90%-100%" 	if inrange(seq,195,216)
 keep if percentile=="0%-10%" 
 sort seq
 egen top10=seq()
-keep if inrange(top10,1,10)
+keep if inrange(top10,1,20)
  
 
 sort top10
@@ -68,6 +70,9 @@ save `top10_poorest_all'
 use "$work_data/main_dataset.dta",clear
 keep if year==$pastyear
 drop if country=="WO"
+//----------------------------------
+drop if country=="ZW"
+//----------------------------------
 
 gen mnnfin_pasty_ppp = mnnfin / ppp_eur
 gen mnwnxa_pasty_ppp = mnwnxa / ppp_eur
@@ -100,7 +105,7 @@ sort mnninc_pasty_ppp_eur_pc
  drop if inlist(classif,"0-100k", "100k-1m","1m-10m")
  sort seq
  egen top10=seq()
- keep if inrange(top10,1,10)
+ keep if inrange(top10,1,20)
  
 
  

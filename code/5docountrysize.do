@@ -677,7 +677,7 @@ replace percentile="90%-100%" if inrange(seq,195,216)
 keep if percentile=="90%-100%" 
 gsort -seq
 egen top10=seq()
-keep if inrange(top10,1,10)
+keep if inrange(top10,1,20)
  
 
 *Format for exporting
@@ -738,7 +738,7 @@ replace percentile="90%-100%" if inrange(seq,195,216)
 drop if inlist(classif,"0-100k", "100k-1m","1m-10m")
 gsort -seq
 egen top10=seq()
-keep if inrange(top10,1,10)
+keep if inrange(top10,1,20)
  
 sort top10
 

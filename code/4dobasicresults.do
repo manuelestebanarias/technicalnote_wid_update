@@ -610,11 +610,9 @@ export excel using "$output", sheet("DataT5b", modify) cell(B5) keepcellfmt
 /*------------------------------------------------------------------------------
 Table 2. Per capita national income growth by world regions (1980-2023) EUR MER
 ------------------------------------------------------------------------------*/
-
-
 use "$work_data/main_dataset.dta",clear
 *keep if inrange(year, 1979,$pastyear )
-keep country region1 mnninc_mer_eur npopul year
+keep country region1 mnninc_mer_eur_con npopul year
 
 collapse (sum) mnninc_mer_eur npopul, by(region year)
 
@@ -687,7 +685,7 @@ Table 2. Per capita national income growth by world regions (1980-2023) EUR MER
 
 use "$work_data/main_dataset.dta",clear
 *keep if inrange(year, 1979,$pastyear )
-keep country region1 mnninc_mer_usd npopul year
+keep country region1 mnninc_mer_usd_con npopul year
 
 collapse (sum) mnninc_mer_usd npopul, by(region year)
 
@@ -878,7 +876,7 @@ Table 3. Per Capita National Income by World Regions (1800-2023)
 
 *Import data
 use "$work_data/coreterritories_dataset.dta",clear
-keep country year mnninc ppp_usd npopul 
+keep country year mnninc ppp_eur npopul 
 
 replace mnninc=mnninc/ppp
 replace mnninc= mnninc/npopul
@@ -954,6 +952,7 @@ export excel using "$output", sheet("DataT7", modify) cell(B5) keepcellfmt
 /*------------------------------------------------------------------------------
 Table 4. Population by World Regions (1800-2023)
 ------------------------------------------------------------------------------*/
+
 *Import data
 use "$work_data/coreterritories_dataset.dta",clear
 keep country year npopul
@@ -1022,7 +1021,7 @@ export excel using "$output", sheet("DataT8", modify) cell(B5) keepcellfmt
 /*------------------------------------------------------------------------------
 Table 5. Price index growth by world regions (1980-2023) EUR PPP
 ------------------------------------------------------------------------------*/
-	
+
 use "$work_data/coreterritories_dataset.dta",clear
 keep if inlist(country, "WO", "QE", "XB", "XL", "XN", "XF", "XR", "QL", "XS")
 keep country year inyeup

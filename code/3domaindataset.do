@@ -42,10 +42,11 @@ reshape wide value, i(country year) j(variable) string
 rename value* *
 
 *Calculate missing variables
-gen double mgroni = mgdpro+mnnfin	// gross national income
+gen double mgroni = mgdpro + mnnfin	// gross national income
 gen double mehsgo = mheage + meduge 	//Public spending in education and health
 gen double mopsgo = mexpgo- (mheage + meduge) -msopge	//Other public spending
 gen double mssugo = mpsugo - minpgo //secondary surplus
+gen double mndinc = mnninc + mscinx // Net disposable income
 
 * Bring PPP pastyear
 merge m:1 country using "$work_data/ppp.dta", nogen keep(master match)
@@ -71,6 +72,8 @@ foreach v in mndpro mnnfin mgdpro mnwnxa mscinx mnninc mscrnx mscgnx msconx { //
 	*Convert to current USD
 	gen `v'_mer_usd		= (inyixx*`v')/xlcusx
 	gen `v'_mer_eur		= (inyixx*`v')/xlceux
+	gen `v'_mer_usd_cur	= (inyixx*`v')/exc_usd 
+	gen `v'_mer_eur_cur	= (inyixx*`v')/exc_eur
 	*Convert to constant USD 2024
 	gen `v'_mer_usd_con	= (`v')/exc_usd 
 	gen `v'_mer_eur_con	= (`v')/exc_eur 
@@ -81,6 +84,8 @@ foreach v in mndpro mnnfin mgdpro mnwnxa mscinx mnninc mscrnx mscgnx msconx { //
 	*Convert to current USD 2024
 	gen `v'_pasty_ppp_usd_cur = (inyixx*`v')/ppp_usd 
 	gen `v'_pasty_ppp_eur_cur = (inyixx*`v')/ppp_eur 
+	gen `v'_ppp_usd_cur = (inyixx*`v')/xlceup 
+	gen `v'_ppp_eur_cur = (inyixx*`v')/xlceup  
 	*Convert to constant USD 2024
 	gen `v'_pasty_ppp_usd = `v'/ppp_usd 
 	gen `v'_pasty_ppp_eur = `v'/ppp_eur  
@@ -94,12 +99,13 @@ foreach v in mgroni mrevgo mretgo mntrgr mexpgo meduge mheage mehsgo  msopge mop
 }
 */
 
-*Calcuate price indexes
+*Calculate price indexes
 generate  inyusx =  mnninc_mer_usd/mnninc_mer_usd_con
 generate  inyeux =  mnninc_mer_eur/mnninc_mer_eur_con
-generate  inyusp =  mnninc_ppp_usd/mnninc_pasty_ppp_usd
-generate  inyeup =  mnninc_ppp_eur/mnninc_pasty_ppp_eur
+generate  inyusp =  mnninc_ppp_usd_cur/mnninc_pasty_ppp_usd
+generate  inyeup =  mnninc_ppp_eur_cur/mnninc_pasty_ppp_eur
 
+*
 
 *Generate Region variable
 merge m:1 country using "$work_data/import-core-country-codes-output.dta", nogen keepusing(corecountry region* shortname)
