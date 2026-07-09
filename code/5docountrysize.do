@@ -1,18 +1,12 @@
-clear all
-tempfile temp_reg
-save    `temp_reg', emptyok
 
-clear all
-tempfile data_year
-save    `data_year', emptyok
 
 **# Table 5
 /*------------------------------------------------------------------------------
-Table 5. Country Size by World Regions ($pastyear)
+Table 5. Country Size by World Regions ($prev_year)
 ------------------------------------------------------------------------------*/
 /*
 use "$work_data/main_dataset.dta",clear
-keep if year==$pastyear
+keep if year==$prev_year
 
 *Format
 replace npopul=npopul/1000000 // in millions
@@ -114,11 +108,11 @@ export excel using "$output", sheet("DataT5", modify) cell(A5) keepcellfmt
 		
 **# Table 6
 /*------------------------------------------------------------------------------
-Table 6. Per Capita National Income by Country Size ($pastyear)
+Table 6. Per Capita National Income by Country Size ($prev_year)
 ------------------------------------------------------------------------------*/
 /*
 use "$work_data/main_dataset.dta",clear
-keep if year==$pastyear
+keep if year==$prev_year
 
 *Format
 drop if country=="WO"
@@ -181,11 +175,11 @@ export excel using "$output", sheet("DataT6", modify) cell(B5) keepcellfmt
 
 **# Table 7
 /*------------------------------------------------------------------------------
-Table 7. Per Capita National Income and Country Size ($pastyear)
+Table 7. Per Capita National Income and Country Size ($prev_year)
 ------------------------------------------------------------------------------*/
 /*
 use "$work_data/main_dataset.dta",clear
-keep if year==$pastyear
+keep if year==$prev_year
 
 *Format
 drop if country=="WO"
@@ -295,8 +289,8 @@ export excel using "$output", sheet("DataT7", modify) cell(B5) keepcellfmt
 		
 **# Figure 2
 /*------------------------------------------------------------------------------
-Per Capita National Income and Country Size 1970-$pastyear 
-($pastyear PPP €)
+Per Capita National Income and Country Size 1970-$prev_year 
+($prev_year PPP €)
 ------------------------------------------------------------------------------*/
 /*
 **Part 1: Select small countries
@@ -394,27 +388,27 @@ export excel using "$output", sheet("DataF2", modify) cell(A4) keepcellfmt
 **# Figures 2b and 2c
 
 /*------------------------------------------------------------------------------
-Figure 2b Per Capita National Income by Country Size 1970-$pastyear
-(% of world average) -$pastyear PPP €-
+Figure 2b Per Capita National Income by Country Size 1970-$prev_year
+(% of world average) -$prev_year PPP €-
 
-Figure 2c Per Capita National Income by Country Size 1970-$pastyear
-(% of world average) -$pastyear PPP €- log scale
+Figure 2c Per Capita National Income by Country Size 1970-$prev_year
+(% of world average) -$prev_year PPP €- log scale
 ------------------------------------------------------------------------------*/
 /*
 
 use  "$work_data/main_dataset.dta",clear
-keep if year==$pastyear
+keep if year==$prev_year
 keep country   classif
-tempfile classif_$pastyear
-save `classif_$pastyear' 
+tempfile classif_$prev_year
+save `classif_$prev_year' 
 
-forv year=1970/$pastyear{
+forv year=1970/$prev_year{
 
 	use "$work_data/main_dataset.dta",clear
 	keep if year==`year'
 	drop classif
 
-	merge 1:1 country using "`classif_$pastyear'"
+	merge 1:1 country using "`classif_$prev_year'"
 	keep if _merge==3
 	drop _merge
 
@@ -505,15 +499,15 @@ export excel using "$output", sheet("DataF2_b", modify) cell(B4) keepcellfmt
 		
 **# Figures 2d-2g 
 /*------------------------------------------------------------------------------
-Equivalent to Figure 2b Per Capita National Income by Country Size 1970-$pastyear
-(% of world average) -$pastyear PPP €-
+Equivalent to Figure 2b Per Capita National Income by Country Size 1970-$prev_year
+(% of world average) -$prev_year PPP €-
 for regions EURO, LATA, NAOC, and SSA
 ------------------------------------------------------------------------------*/
 /*
 use "$work_data/main_dataset.dta",clear
 keep if year>=1970
 drop classif
-merge m:1 country using "`classif_$pastyear'"
+merge m:1 country using "`classif_$prev_year'"
 keep if _merge==3
 drop _merge
 
@@ -581,18 +575,18 @@ label var sh_mnnincMS Mauritania
 
 tsline sh_mnnincAD sh_mnnincAG sh_mnnincAI  sh_mnnincBM sh_mnnincBQ sh_mnnincDM  sh_mnnincGG sh_mnnincGI sh_mnnincGL sh_mnnincIM sh_mnnincKN sh_mnnincKY sh_mnnincLI sh_mnnincMC sh_mnnincMH sh_mnnincMS sh_mnnincNR sh_mnnincPW  sh_mnnincSM  sh_mnnincSX sh_mnnincTC sh_mnnincTV  sh_mnnincVG 
 
-tsline sh_mnnincMS , title("Per Capita National Income in Sub Saharan Africa 1970-$pastyear" "(% of world average) -PPP- ") note("Note: Countries with populations between 0 and 100k in $pastyear.") legend(row(1)) 
+tsline sh_mnnincMS , title("Per Capita National Income in Sub Saharan Africa 1970-$prev_year" "(% of world average) -PPP- ") note("Note: Countries with populations between 0 and 100k in $prev_year.") legend(row(1)) 
 
-tsline  sh_mnnincBM    sh_mnnincMH   sh_mnnincNR   sh_mnnincPW   sh_mnnincTV    , title("Per Capita National Income in" "North America and Oceania 1970-$pastyear" "(% of world average) -PPP- ") note("Note: Countries with populations between 0 and 100k in $pastyear.") lpattern(dash) legend(row(2))
-
-
-tsline  sh_mnnincAD   sh_mnnincGG sh_mnnincGI sh_mnnincGL sh_mnnincIM  sh_mnnincLI sh_mnnincMC sh_mnnincSM 	, title("Per Capita National Income in" "Europe 1970-$pastyear" "(% of world average) -PPP- ") note("Note: Countries with populations between 0 and 100k in $pastyear.") lpattern(dash dash dash) legend(row(2))
+tsline  sh_mnnincBM    sh_mnnincMH   sh_mnnincNR   sh_mnnincPW   sh_mnnincTV    , title("Per Capita National Income in" "North America and Oceania 1970-$prev_year" "(% of world average) -PPP- ") note("Note: Countries with populations between 0 and 100k in $prev_year.") lpattern(dash) legend(row(2))
 
 
+tsline  sh_mnnincAD   sh_mnnincGG sh_mnnincGI sh_mnnincGL sh_mnnincIM  sh_mnnincLI sh_mnnincMC sh_mnnincSM 	, title("Per Capita National Income in" "Europe 1970-$prev_year" "(% of world average) -PPP- ") note("Note: Countries with populations between 0 and 100k in $prev_year.") lpattern(dash dash dash) legend(row(2))
 
-tsline  sh_mnnincAG   sh_mnnincAI  sh_mnnincBQ   sh_mnnincDM   sh_mnnincKN   sh_mnnincKY   sh_mnnincSX   sh_mnnincTC    sh_mnnincVG , title("Per Capita National Income in" "Latin America and the Caribean 1970-$pastyear" "(% of world average) -PPP- ") note("Note: Countries with populations between 0 and 100k in $pastyear.") lpattern(dash dash dash dash dash dash shortdash shortdash shortdash shortdash  ) legend(row(4))
 
-tsline  sh_mnnincBM  sh_mnnincKY  , title("Per Capita National Income" "(% of world average) -PPP- ") note("Note: Countries with populations between 0 and 100k in $pastyear.")
+
+tsline  sh_mnnincAG   sh_mnnincAI  sh_mnnincBQ   sh_mnnincDM   sh_mnnincKN   sh_mnnincKY   sh_mnnincSX   sh_mnnincTC    sh_mnnincVG , title("Per Capita National Income in" "Latin America and the Caribean 1970-$prev_year" "(% of world average) -PPP- ") note("Note: Countries with populations between 0 and 100k in $prev_year.") lpattern(dash dash dash dash dash dash shortdash shortdash shortdash shortdash  ) legend(row(4))
+
+tsline  sh_mnnincBM  sh_mnnincKY  , title("Per Capita National Income" "(% of world average) -PPP- ") note("Note: Countries with populations between 0 and 100k in $prev_year.")
 
 
 *Europe
@@ -636,132 +630,6 @@ export excel using  "$output", sheet("DataF2_b_region", modify) cell(A4) keepcel
 		
 		
 
-
-**# Tables 8a and 8b
-/*------------------------------------------------------------------------------
-Table 8a. Top 10 Richest Countries ($pastyear)
-
-Table 8b. Top 10 Richest Countries ($pastyear), excluding countries with population below 10
-------------------------------------------------------------------------------*/
-**Part 1: All Countries
-*Import data
-use "$work_data/main_dataset.dta",clear
-keep if year==$pastyear
-drop if country=="WO"
-
-gen mnnfin_pasty_ppp = mnnfin / ppp_eur
-gen mnwnxa_pasty_ppp = mnwnxa / ppp_eur
-gen mndpro_pasty_ppp = mndpro / ppp_eur
-gen mnninc_mer		 = mnninc/xlceux
-
-*Gnerate ratio Ratio between MER and PPP Per Capita National Income
-gen mnninc_mer_ppp_ratio = ppp_eur / xlceux
-gen mnnfin_ratio=mnnfin_pasty_ppp / mndpro_pasty_ppp
-gen mnwnxa_ratio=mnwnxa_pasty_ppp / mndpro_pasty_ppp
-
-*Select top 10 countries according to per capita net national income  (PPP)
-gen mnninc_pasty_ppp_eur_pc = mnninc_pasty_ppp_eur /npopul
-sort mnninc_pasty_ppp_eur_pc
-egen seq=seq()
-gen percentile=""
-replace percentile="0%-10%" if inrange(seq,1,22)
-replace percentile="10%-20%" if inrange(seq,23,44)
-replace percentile="20%-30%" if inrange(seq,45,66)
-replace percentile="30%-40%" if inrange(seq,67,87)
-replace percentile="40%-50%" if inrange(seq,88,108) 
-replace percentile="50%-60%" if inrange(seq,109,129)
-replace percentile="60%-70%" if inrange(seq,130,150)
-replace percentile="70%-80%" if inrange(seq,151,172)
-replace percentile="80%-90%" if inrange(seq,173,194)
-replace percentile="90%-100%" if inrange(seq,195,216) 
-keep if percentile=="90%-100%" 
-gsort -seq
-egen top10=seq()
-keep if inrange(top10,1,20)
- 
-
-*Format for exporting
-order country mnninc_pasty_ppp_eur_pc npopul mnnfin_ratio mnninc_mer_ppp mnwnxa_ratio
-keep country mnninc_pasty_ppp_eur_pc npopul mnnfin_ratio mnninc_mer_ppp top10 mnwnxa_ratio
-foreach var in country mnninc_pasty_ppp_eur_pc npopul mnnfin_ratio mnninc_mer_ppp mnwnxa_ratio{
-	ren `var' `var'_all
-}
-
-rename country_all country
-merge m:1 country using "$work_data/import-core-country-codes-output.dta", nogen keep(master match) keepusing(shortname)
-drop country 
-order shortname
-rename shortname country_all
-
-
-*Save Part 1
-tempfile top10_richest_all
-save `top10_richest_all'
-
-
-
-**Part 2 (Only Small Countries)
-*Import data
-use "$work_data/main_dataset.dta",clear
-keep if year==$pastyear
-drop if country=="WO"
-
-gen mnnfin_pasty_ppp = mnnfin/ppp_eur
-gen mnwnxa_pasty_ppp = mnwnxa/ppp_eur
-gen mndpro_pasty_ppp = mndpro/ppp_eur
-gen mnninc_mer=mnninc/xlceux
-
-*Gnerate ratio Ratio between MER and PPP Per Capita National Income
-gen mnninc_mer_ppp_ratio=ppp_eur/xlceux
-gen mnnfin_ratio=mnnfin_pasty_ppp /mndpro_pasty_ppp
-gen mnwnxa_ratio=mnwnxa_pasty_ppp /mndpro_pasty_ppp
-
-*Select top 10 countries according to per capita net national income  (PPP)
-gen mnninc_pasty_ppp_eur_pc = mnninc_pasty_ppp_eur /npopul
-sort mnninc_pasty_ppp_eur_pc
-gen countries=1
-
- 
-egen seq=seq()
-gen percentile=""
-replace percentile="0%-10%" if inrange(seq,1,22)
-replace percentile="10%-20%" if inrange(seq,23,44)
-replace percentile="20%-30%" if inrange(seq,45,66)
-replace percentile="30%-40%" if inrange(seq,67,87)
-replace percentile="40%-50%" if inrange(seq,88,108) 
-replace percentile="50%-60%" if inrange(seq,109,129)
-replace percentile="60%-70%" if inrange(seq,130,150)
-replace percentile="70%-80%" if inrange(seq,151,172)
-replace percentile="80%-90%" if inrange(seq,173,194)
-replace percentile="90%-100%" if inrange(seq,195,216) 
-
-drop if inlist(classif,"0-100k", "100k-1m","1m-10m")
-gsort -seq
-egen top10=seq()
-keep if inrange(top10,1,20)
- 
-sort top10
-
-*Format for exporting
-order country mnninc_pasty_ppp_eur_pc npopul mnnfin_ratio mnninc_mer_ppp mnwnxa_ratio
-keep country mnninc_pasty_ppp_eur_pc npopul mnnfin_ratio mnninc_mer_ppp top10 mnwnxa_ratio
-
-
-merge m:1 country using "$work_data/import-core-country-codes-output.dta", nogen keep(master match) keepusing(shortname)
-drop country 
-order shortname
-rename shortname country
-
-*Merge with Part 1
-merge 1:1 top10 using "`top10_richest_all'"
-drop _merge
-order top10 country_all mnninc_pasty_ppp_eur_pc_all npopul_all mnnfin_ratio_all mnninc_mer_ppp_all country mnninc_pasty_ppp_eur_pc npopul mnnfin_ratio mnninc_mer_ppp_ratio mnwnxa_ratio_all mnwnxa_ratio
-keep  top10 country_all mnninc_pasty_ppp_eur_pc_all npopul_all mnnfin_ratio_all mnninc_mer_ppp_all country mnninc_pasty_ppp_eur_pc npopul mnnfin_ratio mnninc_mer_ppp_ratio mnwnxa_ratio_all mnwnxa_ratio
-sort top10
-
-*Export to excel
-*export excel using "$output", sheet("DataT8", modify) cell(B5) keepcellfmt		
-export excel using "$output", sheet("DataT11", modify) cell(B5) keepcellfmt		
 
 
 

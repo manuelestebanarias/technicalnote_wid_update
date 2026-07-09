@@ -21,10 +21,10 @@ use "$work_data/main_dataset.dta",clear
 keep if inlist(country,"FR","DE")
 collapse (mean) xlc* ppp_*, by(year)
 
-gen ER_eur_usd  = xlceux / xlcusx
+gen MER_eur_usd  = xlceux / xlcusx
 gen PPP_eur_usd = xlceup / xlcusp
 tsset year
-tsline ER_eur_usd PPP_eur_usd if inrange(year,1990,2012)
+tsline MER_eur_usd PPP_eur_usd if inrange(year,1990,2012)
 
 
 *For Figures
@@ -34,10 +34,10 @@ keep country year xlceup xlceux xlcusp xlcusx xlcyup xlcyux
 keep if inlist(country,"FR","DE")
 collapse (mean) xlc*, by(year)
 
-gen ER_eur_usd  = xlceux / xlcusx
+gen MER_eur_usd  = xlceux / xlcusx
 gen PPP_eur_usd = xlceup / xlcusp
 tsset year
-tsline ER_eur_usd PPP_eur_usd if inrange(year,1990,2012)
+tsline MER_eur_usd PPP_eur_usd if inrange(year,1990,2012)
 
 
 // restore	
@@ -47,16 +47,16 @@ tsline ER_eur_usd PPP_eur_usd if inrange(year,1990,2012)
 /*------------------------------------------------------------------------------
 Figure 0b. Exchange rate and purchasing power parity: euro/yuan 
 ------------------------------------------------------------------------------*/
-g ER_usd_yuan  = xlcusx / xlcyux
+g MER_usd_yuan  = xlcusx / xlcyux
 g PPP_usd_yuan = xlcusp / xlcyup
 
-g ER_eur_yuan=ER_eur_usd*ER_usd_yuan
+g MER_eur_yuan=MER_eur_usd*MER_usd_yuan
 g PPP_eur_yuan=PPP_eur_usd*PPP_usd_yuan
 
-tsline ER_eur_yuan PPP_eur_yuan if inrange(year,1990,2012)
+tsline MER_eur_yuan PPP_eur_yuan if inrange(year,1990,$prev_year)
 keep if year>=1990
-order year ER_eur_usd PPP_eur_usd ER_eur_yuan PPP_eur_yuan
-keep year ER_eur_usd PPP_eur_usd ER_eur_yuan PPP_eur_yuan
+order year MER_eur_usd PPP_eur_usd MER_eur_yuan PPP_eur_yuan
+keep year MER_eur_usd PPP_eur_usd MER_eur_yuan PPP_eur_yuan
 export excel using "$output", sheet("DataF0a", modify) cell(B5) keepcellfmt 
 
 **# Figure 0c
@@ -76,24 +76,20 @@ Figure 0d. Exchange rate and purchasing power parity: euro/yen
 /*------------------------------------------------------------------------------
 Figure 1. Per Capita National Income by World Region 1800-2023
 ------------------------------------------------------------------------------*/
-use "$work_data/coreterritories_dataset.dta",clear
-keep country year mnninc ppp_eur npopul 
+use  "$work_data/coreterritories_dataset.dta", clear
+keep country year mnninc_pasty_ppp_eur npopul 
 
-replace mnninc=mnninc/ppp
+rename mnninc_pasty_ppp_eur mnninc
 replace mnninc= mnninc/npopul
-drop ppp npopul
-*rename country region1
-*merge m:1 region1 using "$work_data/import-region-codes-output.dta", nogen keep(master match) keepusing(shortname)
-*sort order
-*replace region1=shortname if !missing(shortname) & substr(region1,1,1)!="O"
-*drop shortname  
-*rename region1 country
+drop  npopul
+
+
 sort country year
 
 reshape wide mnninc,i(year) j(country) string
 rename mnninc* *
 
-order year WO QE XB XL XN XF XR QL XS DE FR	GB	IT	ES	SE	OC	QM	US	CA	AU	NZ	OH	AR	BR	CL	CO	MX	OD	TR	EG	DZ	OE	ZA	OJ	RU	OA	CN	JP	OB	IN	ID	OI
+order year WO QE XB XL XN XF XR QL XS DE DK	ES	FR	GB	IT	NL	NO	SE	OC	QM	US	CA	AU	NZ	OH	AR	BR	CL	CO	MX	OD	AE	DZ	EG	IR	MA	SA	TR	OE	CD	CI	ET	KE	ML	NE	NG	RW	SD	ZA	OJ	RU	OA	CN	JP	KR	TW	OB	BD	IN	ID	MM	PK	PH	TH	VN	OI
 
 export excel using "$output", sheet("DataF1", modify) cell(B5) keepcellfmt
 
@@ -104,7 +100,7 @@ export excel using "$output", sheet("DataF1", modify) cell(B5) keepcellfmt
 //   Table 1. National income by world regions (2024)
 //------------------------------------------------------------------------------
 use  "$work_data/main_dataset.dta",clear
-keep if year==$pastyear
+keep if year==$prev_year 
 keep country region1 npopul mnninc_pasty_ppp_eur order
 
 *Compute for world
@@ -142,7 +138,7 @@ export excel using "$output", sheet("DataT1", modify) cell(B5) keepcellfmt
 Table 1 PPP MER. National income by world regions PPPMER (2024)
 ------------------------------------------------------------------------------*/
 use  "$work_data/main_dataset.dta",clear
-keep if year==$pastyear
+keep if year==$prev_year 
 
 keep country region1 npopul mnninc_pasty_ppp_eur mnninc_mer_eur mnninc_pasty_ppp_usd mnninc_mer_usd order
 
@@ -178,7 +174,7 @@ export excel using "$output", sheet("DataT2", modify) cell(B5) keepcellfmt
 //   Table 1. National income by world regions average PPPMER(2024)
 //------------------------------------------------------------------------------
 use  "$work_data/main_dataset.dta",clear
-keep if year==$pastyear
+keep if year==$prev_year 
 keep country region1 npopul mnninc_pasty_ppp_eur mnninc_mer_eur mnninc_pasty_ppp_usd mnninc_mer_usd order
 
 *Compute for world
@@ -212,12 +208,13 @@ order shortname mnninc_pc_pasty_ppp_eur mnninc_pc_pasty_ppp_eur_sh mnninc_pc_mer
 
 *export excel using "$output", sheet("DataT1_averagePPPMER", modify) cell(B5) keepcellfmt 
 export excel using "$output", sheet("DataT2a", modify) cell(B5) keepcellfmt 
+
 **# Table 1 GDP PPPMER
 /*------------------------------------------------------------------------------
 Table 1 PPP MER. Gross Domestic Product by world regions PPPMER (2024)
 ------------------------------------------------------------------------------*/
 use  "$work_data/main_dataset.dta",clear
-keep if year==$pastyear
+keep if year==$prev_year 
 
 keep country region1 npopul mgdpro_pasty_ppp_eur mgdpro_mer_eur mgdpro_pasty_ppp_usd mgdpro_mer_usd order
 
@@ -246,12 +243,13 @@ order  shortname  mgdpro_pasty_ppp_eur mgdpro_pasty_ppp_eur_sh mgdpro_mer_eur mg
 
 *export excel using "$output", sheet("DataT1_GDPPPPMER", modify) cell(B5) keepcellfmt
 export excel using "$output", sheet("DataT3", modify) cell(B5) keepcellfmt
+
 **# Table 1 GDP average PPPMER
 //------------------------------------------------------------------------------
 //   Table 1. Gross Domestic Product by world regions average PPPMER(2024)
 //------------------------------------------------------------------------------
 use  "$work_data/main_dataset.dta",clear
-keep if year==$pastyear
+keep if year==$prev_year 
 keep country region1 npopul mgdpro_pasty_ppp_eur mgdpro_mer_eur mgdpro_pasty_ppp_usd mgdpro_mer_usd order
 
 *Compute for world
@@ -302,7 +300,7 @@ merge 1:m country using "$work_data/main_dataset.dta"
 
 keep if year==2021
 *ppp_usd = ppp2021_icp2021_usd
-br year country  ppp_eur ppp_usd ppp_eur ppp_usd ppp2021_icp2021_usd ppp2021_icp2017_usd
+*br year country  ppp_eur ppp_usd ppp_eur ppp_usd ppp2021_icp2021_usd ppp2021_icp2017_usd
 gen mnninc_ppp_2021_usd_icp2021=(mnninc/ppp2021_icp2021_usd)
 gen mnninc_ppp_2021_usd_icp2017=mnninc/ppp2021_icp2017_usd
 keep country region1 npopul mnninc_ppp_2021_usd_icp2021 mnninc_ppp_2021_usd_icp2017 order
@@ -347,7 +345,7 @@ order 	shortname mnninc_ppp_2021_usd_icp2021_pc mnninc_ppp_2021_usd_icp2021_sh m
 
 
 *export excel using "$output", sheet("DataT1b", modify) cell(B5) keepcellfmt 
-export excel using "$output", sheet("DataT4", modify) cell(B5) keepcellfmt 
+export excel using "$output", sheet("DataT3c", modify) cell(B5) keepcellfmt 
 
 
 **# Table 1b Euro
@@ -371,7 +369,7 @@ merge 1:m country  using "$work_data/main_dataset.dta"
 tab country if _merge==2
 
 
-keep if year==$pastyear
+keep if year==$prev_year
 *ppp_usd = ppp2021_icp2021_usd
 br year country   ppp_eur  ppp2023_icp2017_eur 
 ren ppp_eur ppp2023_icp2021_eur
@@ -433,7 +431,7 @@ Table 1c. National-Income-Weighted Average Euro Price Index (2023)
 
 
 *use "$work_data/main_dataset.dta", clear
-*keep if year==$pastyear
+*keep if year==$prev_year
 *keep country year xlceup mnninc
 *keep if inlist(country, "AD", "AT", "BE", "CY", "DE", "EE", "ES", "FI", "FR") | ///
 		inlist(country, "GR", "HR", "IE", "IT", "KS", "LT", "LU", "LV", "MC") | ///
@@ -465,12 +463,13 @@ Table 2. Per capita national income growth by world regions (1980-2023)
 ------------------------------------------------------------------------------*/
 
 use "$work_data/main_dataset.dta",clear
-*keep if inrange(year, 1979,$pastyear )
-keep country region1 mnninc_pasty_ppp_eur npopul year
 
-collapse (sum) mnninc_pasty_ppp_eur npopul, by(region year)
+keep country region1 region5 mnninc_pasty_ppp_eur npopul year
 
-gen double  mnninc_pc_pasty_ppp=mnninc_pasty_ppp_eur/npopul
+collapse (sum) mnninc_pasty_ppp_eur npopul, by(region1 year)
+
+
+gen double  mnninc_pc_pasty_ppp = mnninc_pasty_ppp_eur/npopul
 drop mnninc_pasty_ppp_eur npopul
 
 reshape wide mnninc_pc_pasty_ppp, i(year) j(region1) string
@@ -479,45 +478,34 @@ reshape wide mnninc_pc_pasty_ppp, i(year) j(region1) string
 foreach region in QE XB XL XN XF XR QL XS WO {
 	preserve
 		keep year mnninc_pc_pasty_ppp`region'
-		sum mnninc_pc_pasty_ppp`region' if year==$pastyear
+		sum mnninc_pc_pasty_ppp`region' if year==$prev_year
 		loc tf=r(mean)
+		sum mnninc_pc_pasty_ppp`region' if year==2020
+		loc tp=r(mean)
+		sum mnninc_pc_pasty_ppp`region' if year==2000
+		loc ts=r(mean)
 		sum mnninc_pc_pasty_ppp`region' if year==1980
 		loc ti=r(mean)
 		sum mnninc_pc_pasty_ppp`region' if year==1800
 		loc to=r(mean)
 		
-		tsset year
-		g annual_growth=100*(mnninc_pc_pasty_ppp`region'/L.mnninc_pc_pasty_ppp`region'-1)
-		forv x=2020/$pastyear{
-			sum annual_growth if year==`x'
-		}
-		
-		sum annual_growth if inrange(year,1800,$pastyear )
-		loc growth1800_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1980,$pastyear )
-		loc growth1980_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1980,2000)
-		loc growth1980_2000=r(mean)
-		sum annual_growth if inrange(year,2000,$pastyear )
-		loc growth2000_$pastyear =r(mean)
-		sum annual_growth if inrange(year,2019,$pastyear )
-		loc growth2019_$pastyear =r(mean)
 
 		gen region1="`region'"
 		gen mnninc_pc_pasty_ppp1800=`to'
 		gen mnninc_pc_pasty_ppp1980=`ti'
-		gen mnninc_pc_pasty_ppp$pastyear =`tf'
-		gen growth1800_$pastyear =`growth1800_$pastyear '
-		gen growth1980_$pastyear =`growth1980_$pastyear '
-		gen growth1980_2000      =`growth1980_2000'
-		gen growth2000_$pastyear =`growth2000_$pastyear '
-		gen growth2019_$pastyear =`growth2019_$pastyear '
+		gen mnninc_pc_pasty_ppp2000=`ts'
+		gen mnninc_pc_pasty_ppp2020=`tp'
+		gen mnninc_pc_pasty_ppp$prev_year =`tf'
+		gen growth1800_$prev_year = 100*((`tf'/`to')^(1/($prev_year - 1800)) - 1)
+		gen growth1980_2000       = 100*((`ts'/`ti')^(1/(2000-1980))         - 1)
+		gen growth2000_$prev_year = 100*((`tf'/`ts')^(1/($prev_year - 2000)) - 1)
+		gen growth2020_$prev_year = 100*((`tf'/`tp')^(1/($prev_year - 2020)) - 1)
 
-		keep region mnninc_pc_pasty_ppp1800 mnninc_pc_pasty_ppp1980 mnninc_pc_pasty_ppp$pastyear  growth1800_$pastyear growth1980_$pastyear  growth1980_2000 growth2000_$pastyear  growth2019_$pastyear  
+		keep region mnninc_pc_pasty_ppp1800  mnninc_pc_pasty_ppp1980 mnninc_pc_pasty_ppp2000 mnninc_pc_pasty_ppp2020 mnninc_pc_pasty_ppp$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
 		duplicates drop
 		
 		append using "`temp_reg1'"
-		save`temp_reg1', replace
+		save `temp_reg1', replace
 	restore
 }
 
@@ -530,7 +518,7 @@ order shortname
 
 *Export
 *export excel using "$output", sheet("DataT2", modify) cell(B5) keepcellfmt
-export excel using "$output", sheet("DataT5a", modify) cell(B5) keepcellfmt
+export excel using "$output", sheet("DataT4a", modify) cell(B5) keepcellfmt
 
 **# Table 2 USDPPP
 /*------------------------------------------------------------------------------
@@ -538,7 +526,7 @@ Table 2. Per capita national income growth by world regions (1980-2023) USD PPP
 ------------------------------------------------------------------------------*/
 
 use "$work_data/main_dataset.dta",clear
-*keep if inrange(year, 1979,$pastyear )
+*keep if inrange(year, 1979,$prev_year )
 keep country region1 mnninc_pasty_ppp_usd npopul year
 
 collapse (sum) mnninc_pasty_ppp_usd npopul, by(region year)
@@ -552,45 +540,34 @@ reshape wide mnninc_pc_pasty_ppp, i(year) j(region1) string
 foreach region in QE XB XL XN XF XR QL XS WO {
 	preserve
 		keep year mnninc_pc_pasty_ppp`region'
-		sum mnninc_pc_pasty_ppp`region' if year==$pastyear
+		sum mnninc_pc_pasty_ppp`region' if year==$prev_year
 		loc tf=r(mean)
+		sum mnninc_pc_pasty_ppp`region' if year==2020
+		loc tp=r(mean)
+		sum mnninc_pc_pasty_ppp`region' if year==2000
+		loc ts=r(mean)
 		sum mnninc_pc_pasty_ppp`region' if year==1980
 		loc ti=r(mean)
 		sum mnninc_pc_pasty_ppp`region' if year==1800
 		loc to=r(mean)
 		
-		tsset year
-		g annual_growth=100*(mnninc_pc_pasty_ppp`region'/L.mnninc_pc_pasty_ppp`region'-1)
-		forv x=2020/$pastyear{
-			sum annual_growth if year==`x'
-		}
-		
-		sum annual_growth if inrange(year,1800,$pastyear )
-		loc growth1800_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1980,$pastyear )
-		loc growth1980_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1980,2000)
-		loc growth1980_2000=r(mean)
-		sum annual_growth if inrange(year,2000,$pastyear )
-		loc growth2000_$pastyear =r(mean)
-		sum annual_growth if inrange(year,2019,$pastyear )
-		loc growth2019_$pastyear =r(mean)
 
 		gen region1="`region'"
 		gen mnninc_pc_pasty_ppp1800=`to'
 		gen mnninc_pc_pasty_ppp1980=`ti'
-		gen mnninc_pc_pasty_ppp$pastyear =`tf'
-		gen growth1800_$pastyear =`growth1800_$pastyear '
-		gen growth1980_$pastyear =`growth1980_$pastyear '
-		gen growth1980_2000      =`growth1980_2000'
-		gen growth2000_$pastyear =`growth2000_$pastyear '
-		gen growth2019_$pastyear =`growth2019_$pastyear '
+		gen mnninc_pc_pasty_ppp2000=`ts'
+		gen mnninc_pc_pasty_ppp2020=`tp'
+		gen mnninc_pc_pasty_ppp$prev_year =`tf'
+		gen growth1800_$prev_year = 100*((`tf'/`to')^(1/($prev_year - 1800)) - 1)
+		gen growth1980_2000       = 100*((`ts'/`ti')^(1/(2000-1980))         - 1)
+		gen growth2000_$prev_year = 100*((`tf'/`ts')^(1/($prev_year - 2000)) - 1)
+		gen growth2020_$prev_year = 100*((`tf'/`tp')^(1/($prev_year - 2020)) - 1)
 
-		keep region mnninc_pc_pasty_ppp1800 mnninc_pc_pasty_ppp1980 mnninc_pc_pasty_ppp$pastyear  growth1800_$pastyear growth1980_$pastyear  growth1980_2000 growth2000_$pastyear  growth2019_$pastyear  
+		keep region mnninc_pc_pasty_ppp1800  mnninc_pc_pasty_ppp1980 mnninc_pc_pasty_ppp2000 mnninc_pc_pasty_ppp2020 mnninc_pc_pasty_ppp$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
 		duplicates drop
 		
 		append using "`temp_reg2'"
-		save`temp_reg2', replace
+		save `temp_reg2', replace
 	restore
 }
 
@@ -603,7 +580,7 @@ order shortname
 
 *Export
 *export excel using "$output", sheet("DataT2_USDPPP", modify) cell(B5) keepcellfmt
-export excel using "$output", sheet("DataT5b", modify) cell(B5) keepcellfmt
+export excel using "$output", sheet("DataT4b", modify) cell(B5) keepcellfmt
 
 
 **# Table 2 EURMER
@@ -611,7 +588,7 @@ export excel using "$output", sheet("DataT5b", modify) cell(B5) keepcellfmt
 Table 2. Per capita national income growth by world regions (1980-2023) EUR MER
 ------------------------------------------------------------------------------*/
 use "$work_data/main_dataset.dta",clear
-*keep if inrange(year, 1979,$pastyear )
+*keep if inrange(year, 1979,$prev_year )
 keep country region1 mnninc_mer_eur_con npopul year
 
 collapse (sum) mnninc_mer_eur npopul, by(region year)
@@ -625,45 +602,34 @@ reshape wide mnninc_pc_mer, i(year) j(region1) string
 foreach region in QE XB XL XN XF XR QL XS WO {
 	preserve
 		keep year mnninc_pc_mer`region'
-		sum mnninc_pc_mer`region' if year==$pastyear
+		sum mnninc_pc_mer`region' if year==$prev_year
 		loc tf=r(mean)
+		sum mnninc_pc_mer`region' if year==2020
+		loc tp=r(mean)
+		sum mnninc_pc_mer`region' if year==2000
+		loc ts=r(mean)
 		sum mnninc_pc_mer`region' if year==1980
 		loc ti=r(mean)
 		sum mnninc_pc_mer`region' if year==1800
 		loc to=r(mean)
 		
-		tsset year
-		g annual_growth=100*(mnninc_pc_mer`region'/L.mnninc_pc_mer`region'-1)
-		forv x=2020/$pastyear{
-			sum annual_growth if year==`x'
-		}
-		
-		sum annual_growth if inrange(year,1800,$pastyear )
-		loc growth1800_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1980,$pastyear )
-		loc growth1980_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1980,2000)
-		loc growth1980_2000=r(mean)
-		sum annual_growth if inrange(year,2000,$pastyear )
-		loc growth2000_$pastyear =r(mean)
-		sum annual_growth if inrange(year,2019,$pastyear )
-		loc growth2019_$pastyear =r(mean)
 
 		gen region1="`region'"
 		gen mnninc_pc_mer1800=`to'
 		gen mnninc_pc_mer1980=`ti'
-		gen mnninc_pc_mer$pastyear =`tf'
-		gen growth1800_$pastyear =`growth1800_$pastyear '
-		gen growth1980_$pastyear =`growth1980_$pastyear '
-		gen growth1980_2000      =`growth1980_2000'
-		gen growth2000_$pastyear =`growth2000_$pastyear '
-		gen growth2019_$pastyear =`growth2019_$pastyear '
+		gen mnninc_pc_mer2000=`ts'
+		gen mnninc_pc_mer2020=`tp'
+		gen mnninc_pc_mer$prev_year =`tf'
+		gen growth1800_$prev_year = 100*((`tf'/`to')^(1/($prev_year - 1800)) - 1)
+		gen growth1980_2000       = 100*((`ts'/`ti')^(1/(2000-1980))         - 1)
+		gen growth2000_$prev_year = 100*((`tf'/`ts')^(1/($prev_year - 2000)) - 1)
+		gen growth2020_$prev_year = 100*((`tf'/`tp')^(1/($prev_year - 2020)) - 1)
 
-		keep region mnninc_pc_mer1800 mnninc_pc_mer1980 mnninc_pc_mer$pastyear  growth1800_$pastyear growth1980_$pastyear  growth1980_2000 growth2000_$pastyear  growth2019_$pastyear  
+		keep region mnninc_pc_mer1800  mnninc_pc_mer1980 mnninc_pc_mer2000 mnninc_pc_mer2020 mnninc_pc_mer$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
 		duplicates drop
 		
 		append using "`temp_reg3'"
-		save`temp_reg3', replace
+		save `temp_reg3', replace
 	restore
 }
 
@@ -676,7 +642,7 @@ order shortname
 
 *Export
 *export excel using "$output", sheet("DataT2_EURMER", modify) cell(B5) keepcellfmt
-export excel using "$output", sheet("DataT5c", modify) cell(B5) keepcellfmt
+export excel using "$output", sheet("DataT4c", modify) cell(B5) keepcellfmt
 
 **# Table 2 USDMER
 /*------------------------------------------------------------------------------
@@ -684,7 +650,7 @@ Table 2. Per capita national income growth by world regions (1980-2023) EUR MER
 ------------------------------------------------------------------------------*/
 
 use "$work_data/main_dataset.dta",clear
-*keep if inrange(year, 1979,$pastyear )
+*keep if inrange(year, 1979,$prev_year )
 keep country region1 mnninc_mer_usd_con npopul year
 
 collapse (sum) mnninc_mer_usd npopul, by(region year)
@@ -698,45 +664,34 @@ reshape wide mnninc_pc_mer, i(year) j(region1) string
 foreach region in QE XB XL XN XF XR QL XS WO {
 	preserve
 		keep year mnninc_pc_mer`region'
-		sum mnninc_pc_mer`region' if year==$pastyear
+		sum mnninc_pc_mer`region' if year==$prev_year
 		loc tf=r(mean)
+		sum mnninc_pc_mer`region' if year==2020
+		loc tp=r(mean)
+		sum mnninc_pc_mer`region' if year==2000
+		loc ts=r(mean)
 		sum mnninc_pc_mer`region' if year==1980
 		loc ti=r(mean)
 		sum mnninc_pc_mer`region' if year==1800
 		loc to=r(mean)
 		
-		tsset year
-		g annual_growth=100*(mnninc_pc_mer`region'/L.mnninc_pc_mer`region'-1)
-		forv x=2020/$pastyear{
-			sum annual_growth if year==`x'
-		}
-		
-		sum annual_growth if inrange(year,1800,$pastyear )
-		loc growth1800_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1980,$pastyear )
-		loc growth1980_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1980,2000)
-		loc growth1980_2000=r(mean)
-		sum annual_growth if inrange(year,2000,$pastyear )
-		loc growth2000_$pastyear =r(mean)
-		sum annual_growth if inrange(year,2019,$pastyear )
-		loc growth2019_$pastyear =r(mean)
 
 		gen region1="`region'"
 		gen mnninc_pc_mer1800=`to'
 		gen mnninc_pc_mer1980=`ti'
-		gen mnninc_pc_mer$pastyear =`tf'
-		gen growth1800_$pastyear =`growth1800_$pastyear '
-		gen growth1980_$pastyear =`growth1980_$pastyear '
-		gen growth1980_2000      =`growth1980_2000'
-		gen growth2000_$pastyear =`growth2000_$pastyear '
-		gen growth2019_$pastyear =`growth2019_$pastyear '
+		gen mnninc_pc_mer2000=`ts'
+		gen mnninc_pc_mer2020=`tp'
+		gen mnninc_pc_mer$prev_year =`tf'
+		gen growth1800_$prev_year = 100*((`tf'/`to')^(1/($prev_year - 1800)) - 1)
+		gen growth1980_2000       = 100*((`ts'/`ti')^(1/(2000-1980))         - 1)
+		gen growth2000_$prev_year = 100*((`tf'/`ts')^(1/($prev_year - 2000)) - 1)
+		gen growth2020_$prev_year = 100*((`tf'/`tp')^(1/($prev_year - 2020)) - 1)
 
-		keep region mnninc_pc_mer1800 mnninc_pc_mer1980 mnninc_pc_mer$pastyear  growth1800_$pastyear growth1980_$pastyear  growth1980_2000 growth2000_$pastyear  growth2019_$pastyear  
+		keep region mnninc_pc_mer1800  mnninc_pc_mer1980 mnninc_pc_mer2000 mnninc_pc_mer2020 mnninc_pc_mer$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
 		duplicates drop
 		
 		append using "`temp_reg4'"
-		save`temp_reg4', replace
+		save `temp_reg4', replace
 	restore
 }
 
@@ -749,7 +704,7 @@ order shortname
 
 *Export
 *export excel using "$output", sheet("DataT2_USDMER", modify) cell(B5) keepcellfmt
-export excel using "$output", sheet("DataT5d", modify) cell(B5) keepcellfmt
+export excel using "$output", sheet("DataT4d", modify) cell(B5) keepcellfmt
 
 **# Table 2 Continents
 /*------------------------------------------------------------------------------
@@ -779,49 +734,41 @@ foreach r of local regiones {
 	foreach c of local countries {
 		preserve
 			keep year mnninc_pc_pasty_ppp`c'
-			sum mnninc_pc_pasty_ppp`c' if year==$pastyear
+			sum mnninc_pc_pasty_ppp`c' if year==$prev_year
 			loc tf=r(mean)
+			sum mnninc_pc_pasty_ppp`c' if year==2020
+			loc tp=r(mean)
+			sum mnninc_pc_pasty_ppp`c' if year==2000
+			loc ts=r(mean)
 			sum mnninc_pc_pasty_ppp`c' if year==1980
 			loc ti=r(mean)
 			sum mnninc_pc_pasty_ppp`c' if year==1800
 			loc to=r(mean)
+			
+			gen region1="`c'"
+			gen mnninc_pc_pasty_ppp1800=`to'
+			gen mnninc_pc_pasty_ppp1980=`ti'
+			gen mnninc_pc_pasty_ppp2000=`ts'
+			gen mnninc_pc_pasty_ppp2020=`tp'
+			gen mnninc_pc_pasty_ppp$prev_year =`tf'
+			gen growth1800_$prev_year = 100*((`tf'/`to')^(1/($prev_year - 1800)) - 1)
+			gen growth1980_2000       = 100*((`ts'/`ti')^(1/(2000-1980))         - 1)
+			gen growth2000_$prev_year = 100*((`tf'/`ts')^(1/($prev_year - 2000)) - 1)
+			gen growth2020_$prev_year = 100*((`tf'/`tp')^(1/($prev_year - 2020)) - 1)
 
-			tsset year
-			g annual_growth=100*(mnninc_pc_pasty_ppp`c'/L.mnninc_pc_pasty_ppp`c'-1)
-
-			sum annual_growth if inrange(year,1800,$pastyear )
-			loc growth1800_$pastyear =r(mean)
-			sum annual_growth if inrange(year,1980,$pastyear )
-			loc growth1980_$pastyear =r(mean)
-			sum annual_growth if inrange(year,1980,2000)
-			loc growth1980_2000=r(mean)
-			sum annual_growth if inrange(year,2000,$pastyear )
-			loc growth2000_$pastyear =r(mean)
-			sum annual_growth if inrange(year,2019,$pastyear )
-			loc growth2019_$pastyear =r(mean)
-
-				
-			gen region="`c'"
-			gen mnninc_pc_pasty_ppppc1800=`to'
-			gen mnninc_pc_pasty_ppppc1980=`ti'
-			gen mnninc_pc_pasty_ppppc$pastyear =`tf'
-			gen growth1800_$pastyear = `growth1800_$pastyear'
-			gen growth1980_$pastyear =`growth1980_$pastyear'
-			gen growth1980_2000=`growth1980_2000'
-			gen growth2000_$pastyear =`growth2000_$pastyear'
-			gen growth2019_$pastyear =`growth2019_$pastyear '
-	
-			keep region mnninc_pc_pasty_ppppc1800 mnninc_pc_pasty_ppppc1980 mnninc_pc_pasty_ppppc$pastyear  growth1800_$pastyear growth1980_$pastyear growth1980_2000 growth2000_$pastyear growth2019_$pastyear
+			keep region1 mnninc_pc_pasty_ppp1800  mnninc_pc_pasty_ppp1980 mnninc_pc_pasty_ppp2000 mnninc_pc_pasty_ppp2020 mnninc_pc_pasty_ppp$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
 			duplicates drop
+			
 				
 			append using "`temp_`r''"
 			save`temp_`r'', replace
 		restore
 		}
+
 	*Append in exporting format
 	use  "`temp_`r''", clear
 
-	ren region country
+	ren region1 country
 	merge m:1 country using "$work_data/import-core-country-codes-output.dta", nogen keep(master match) keepusing(shortname region1)
 	
 	replace region1="XR" if missing(region1) & country=="OA"
@@ -853,8 +800,8 @@ foreach r of local regiones {
 	
 	merge m:1 region1 using "$work_data/import-region-codes-output.dta", nogen keep(match master) keepusing(shortname order)
 	rename shortname regionname
-	order  regionname countryname mnninc_pc_pasty_ppppc1800 mnninc_pc_pasty_ppppc1980 mnninc_pc_pasty_ppppc$pastyear growth1800_$pastyear growth1980_$pastyear growth1980_2000 growth2000_$pastyear growth2019_$pastyear
-	keep regionname countryname mnninc_pc_pasty_ppppc1800 mnninc_pc_pasty_ppppc1980 mnninc_pc_pasty_ppppc$pastyear  growth1800_$pastyear  growth1980_$pastyear growth1980_2000 growth2000_$pastyear growth2019_$pastyear  order
+	order  regionname countryname mnninc_pc_pasty_ppp1800  mnninc_pc_pasty_ppp1980 mnninc_pc_pasty_ppp2000 mnninc_pc_pasty_ppp2020 mnninc_pc_pasty_ppp$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
+	keep regionname countryname mnninc_pc_pasty_ppp1800  mnninc_pc_pasty_ppp1980 mnninc_pc_pasty_ppp2000 mnninc_pc_pasty_ppp2020 mnninc_pc_pasty_ppp$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year  growth2020_$prev_year order
 	
 	
 	
@@ -864,16 +811,16 @@ foreach r of local regiones {
  }
 
 u "`temp_asi'", clear
-gsort order  -mnninc_pc_pasty_ppppc$pastyear
+gsort order  -mnninc_pc_pasty_ppp$prev_year
 drop order
-export excel using "$output", sheet("DataT6", modify) cell(B5) keepcellfmt 
+export excel using "$output", sheet("DataT5", modify) cell(B5) keepcellfmt 
 
 
 **# Table 3
 /*------------------------------------------------------------------------------
 Table 3. Per Capita National Income by World Regions (1800-2023)
 ------------------------------------------------------------------------------*/
-
+/*
 *Import data
 use "$work_data/coreterritories_dataset.dta",clear
 keep country year mnninc ppp_eur npopul 
@@ -892,42 +839,36 @@ keep year *WO *QE *XB *XL *XN *XF *XR *QL *XS
 foreach region in WO QE XB XL XN XF XR QL XS {
 	preserve
 		keep year mnninc`region'
-		sum mnninc`region' if year==$pastyear
-		loc mnninc$pastyear = r(mean)
+		sum mnninc`region' if year==$prev_year
+		loc tf=r(mean)
+		sum mnninc`region' if year==2020
+		loc tp=r(mean)
+		sum mnninc`region' if year==2000
+		loc ts=r(mean)
+		sum mnninc`region' if year==1980
+		loc ti=r(mean)
 		sum mnninc`region' if year==1800
-		loc mnninc1800 		= r(mean)
+		loc to=r(mean)
 		
-		loc ratio=`mnninc$pastyear'/`mnninc1800'
 		
-		tsset year
-		gen annual_growth=100*(mnninc`region'/L.mnninc`region'-1)
 
-		sum annual_growth if inrange(year,1800,$pastyear )
-		loc growth1800_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1800,1910)
-		loc growth1800_1910 	 =r(mean)
-		sum annual_growth if inrange(year,1910,$pastyear )
-		loc growth1910_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1910,1950)
-		loc growth1910_1950 	 =r(mean)
-		sum annual_growth if inrange(year,1950,1990)
-		loc growth1950_1990 	 =r(mean)
-		sum annual_growth if inrange(year,1990,$pastyear )
-		loc growth1990_$pastyear =r(mean)	
+		gen region1 		 = "`region'"
+		gen mnninc1800 		 = `to'
+		gen mnninc1980 		 = `ti'
+		gen mnninc2000 	     = `ts'
+		gen mnninc2020       = `tp'
+		gen mnninc$prev_year = `tf'
 		
-		gen region1="`region'"
-		gen mnnincpc1980 			= `mnninc1800'
-		gen mnnincpc$pastyear 		= `mnninc$pastyear'
-		gen ratio					= `ratio'
-		gen growth1800_$pastyear 	= `growth1800_$pastyear'
-		gen growth1800_1910		 	= `growth1800_1910'
-		gen growth1910_$pastyear 	= `growth1910_$pastyear'
-		gen growth1910_1950			= `growth1910_1950'
-		gen growth1950_1990			= `growth1950_1990'
-		gen growth1990_$pastyear 	= `growth1990_$pastyear'
-		keep region mnnincpc1980 mnnincpc$pastyear ratio growth1800_$pastyear growth1800_1910 growth1910_$pastyear growth1910_1950 growth1950_1990 growth1990_$pastyear 
+		loc ratio = `tf'/`to'
+		
+		gen ratio			      = `ratio'
+		gen growth1800_$prev_year = 100*((`tf'/`to')^(1/($prev_year - 1800)) - 1)
+		gen growth1980_2000       = 100*((`ts'/`ti')^(1/(2000-1980))         - 1)
+		gen growth2000_$prev_year = 100*((`tf'/`ts')^(1/($prev_year - 2000)) - 1)
+		gen growth2020_$prev_year = 100*((`tf'/`tp')^(1/($prev_year - 2020)) - 1)
+
+		keep region1 mnninc1800  mnninc1980 mnninc2000 mnninc2020 mnninc$prev_year ratio growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
 		duplicates drop
-		
 		append using "`temp_reg5'"
 		save "`temp_reg5'", replace
 	restore
@@ -945,7 +886,7 @@ order shortname
 // *Export
 *export excel using "$output", sheet("DataT3", modify) cell(B5) keepcellfmt
 export excel using "$output", sheet("DataT7", modify) cell(B5) keepcellfmt
-
+*/
 
 	
 **# Table 4
@@ -957,48 +898,42 @@ Table 4. Population by World Regions (1800-2023)
 use "$work_data/coreterritories_dataset.dta",clear
 keep country year npopul
 keep if inlist(country, "WO", "QE", "XB", "XL", "XN", "XF", "XR", "QL", "XS")
+replace npopul = npopul/1000000
 reshape wide npopul, i(year) j(country) string
 
 *Compute
 foreach region in WO QE XB XL XN XF XR QL XS{
 	preserve
 		keep year npopul`region'
-		sum npopul`region' if year==$pastyear
-		loc npopul$pastyear =r(mean)
+		sum npopul`region' if year==$prev_year
+		loc tf=r(mean)
+		sum npopul`region' if year==2020
+		loc tp=r(mean)
+		sum npopul`region' if year==2000
+		loc ts=r(mean)
+		sum npopul`region' if year==1980
+		loc ti=r(mean)
 		sum npopul`region' if year==1800
-		loc npopul1800=r(mean)
-		
-		loc ratio=`npopul$pastyear'/`npopul1800'
-		
-		tsset year
-		g annual_growth=100*(npopul`region'/L.npopul`region'-1)
+		loc to=r(mean)
 
-		sum annual_growth if inrange(year,1800,$pastyear)
-		loc growth1800_$pastyear=r(mean)
-		sum annual_growth if inrange(year,1800,1910)
-		loc growth1800_1910=r(mean)
-		sum annual_growth if inrange(year,1910,$pastyear)
-		loc growth1910_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1910,1950)
-		loc growth1910_1950=r(mean)
-		sum annual_growth if inrange(year,1950,1990)
-		loc growth1950_1990=r(mean)
-		sum annual_growth if inrange(year,1990,$pastyear)
-		loc growth1990_$pastyear =r(mean)	
+		gen region1="`region'"
+		gen npopul1800=`to'
+		gen npopul1980=`ti'
+		gen npopul2000=`ts'
+		gen npopul2020=`tp'
+		gen npopul$prev_year =`tf'
+		
+		loc ratio = `tf'/`to'
+		
+		gen ratio				  = `ratio'
+		gen growth1800_$prev_year = 100*((`tf'/`to')^(1/($prev_year - 1800)) - 1)
+		gen growth1980_2000       = 100*((`ts'/`ti')^(1/(2000-1980))         - 1)
+		gen growth2000_$prev_year = 100*((`tf'/`ts')^(1/($prev_year - 2000)) - 1)
+		gen growth2020_$prev_year = 100*((`tf'/`tp')^(1/($prev_year - 2020)) - 1)
 
-		g region1="`region'"
-		g npopulpc1980=`npopul1800'/1000000
-		g npopulpc$pastyear =`npopul$pastyear'/1000000
-		g ratio=`ratio'
-		g growth1800_$pastyear =`growth1800_$pastyear'
-		g growth1800_1910=`growth1800_1910'
-		g growth1910_$pastyear =`growth1910_$pastyear'
-		g growth1910_1950=`growth1910_1950'
-		g growth1950_1990=`growth1950_1990'
-		g growth1990_$pastyear =`growth1990_$pastyear'
-		keep region npopulpc1980 npopulpc$pastyear ratio growth1800_$pastyear growth1800_1910 growth1910_$pastyear growth1910_1950 growth1950_1990 growth1990_$pastyear
+		keep region1 npopul1800  npopul1980 npopul2000 npopul2020 npopul$prev_year ratio growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
 		duplicates drop
-		
+	
 		append using "`temp_reg6'"
 		save "`temp_reg6'", replace
 	restore
@@ -1014,13 +949,18 @@ order shortname
 
 *Export
 *export excel using "$output", sheet("DataT4", modify) cell(B5) keepcellfmt
-export excel using "$output", sheet("DataT8", modify) cell(B5) keepcellfmt
+export excel using "$output", sheet("DataT6", modify) cell(B5) keepcellfmt
 
 	
 **# Table 5 EUR PPP 
 /*------------------------------------------------------------------------------
 Table 5. Price index growth by world regions (1980-2023) EUR PPP
 ------------------------------------------------------------------------------*/
+forv x=1/10 {
+	clear all
+	tempfile temp_reg`x'
+	save    `temp_reg`x'', emptyok
+}
 
 use "$work_data/coreterritories_dataset.dta",clear
 keep if inlist(country, "WO", "QE", "XB", "XL", "XN", "XF", "XR", "QL", "XS")
@@ -1031,48 +971,35 @@ reshape wide inyeup, i(year) j(country) string
 *Compute
 foreach region in QE XB XL XN XF XR QL XS WO {
 	preserve
-		
-		sum inyeup`region' if year==$pastyear
+		keep year inyeup`region'
+		sum inyeup`region' if year==$prev_year
 		loc tf=r(mean)
+		sum inyeup`region' if year==2020
+		loc tp=r(mean)
+		sum inyeup`region' if year==2000
+		loc ts=r(mean)
 		sum inyeup`region' if year==1980
 		loc ti=r(mean)
 		sum inyeup`region' if year==1800
 		loc to=r(mean)
-		
-		tsset year
-		g annual_growth=100*(inyeup`region'/L.inyeup`region'-1)
-		/*
-		forv x=2020/$pastyear{
-			sum annual_growth if year==`x'
-		}
-		*/
-		
-		sum annual_growth if inrange(year,1800,$pastyear )
-		loc growth1800_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1980,$pastyear )
-		loc growth1980_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1980,2000)
-		loc growth1980_2000=r(mean)
-		sum annual_growth if inrange(year,2000,$pastyear )
-		loc growth2000_$pastyear =r(mean)
-		sum annual_growth if inrange(year,2019,$pastyear )
-		loc growth2019_$pastyear =r(mean)
 
 		gen region1="`region'"
 		gen inyeup1800=`to'
 		gen inyeup1980=`ti'
-		gen inyeup$pastyear =`tf'
-		gen growth1800_$pastyear =`growth1800_$pastyear '
-		gen growth1980_$pastyear =`growth1980_$pastyear '
-		gen growth1980_2000      =`growth1980_2000'
-		gen growth2000_$pastyear =`growth2000_$pastyear '
-		gen growth2019_$pastyear =`growth2019_$pastyear '
+		gen inyeup2000=`ts'
+		gen inyeup2020=`tp'
+		gen inyeup$prev_year =`tf'
+		
+		gen growth1800_$prev_year = 100*((`tf'/`to')^(1/($prev_year - 1800)) - 1)
+		gen growth1980_2000       = 100*((`ts'/`ti')^(1/(2000-1980))         - 1)
+		gen growth2000_$prev_year = 100*((`tf'/`ts')^(1/($prev_year - 2000)) - 1)
+		gen growth2020_$prev_year = 100*((`tf'/`tp')^(1/($prev_year - 2020)) - 1)
 
-		keep region inyeup1800 inyeup1980 inyeup$pastyear  growth1800_$pastyear growth1980_$pastyear  growth1980_2000 growth2000_$pastyear  growth2019_$pastyear  
+		keep region1 inyeup1800  inyeup1980 inyeup2000 inyeup2020 inyeup$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
 		duplicates drop
 		
 		append using "`temp_reg7'"
-		save`temp_reg7', replace
+		save `temp_reg7', replace
 	restore
 }
 
@@ -1081,10 +1008,10 @@ use "`temp_reg7'", clear
 merge m:1 region1 using "$work_data/import-region-codes-output.dta", nogen keep(master match) keepusing(shortname order)
 sort order
 drop region1 order 
-order shortname
+order shortname inyeup1800  inyeup1980 inyeup2000 inyeup2020 inyeup$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
 
 *Export
-export excel using "$output", sheet("DataT9a", modify) cell(B5) keepcellfmt
+export excel using "$output", sheet("DataT7a", modify) cell(B5) keepcellfmt
 
 	
 **# Table 5 USD PPP 
@@ -1101,48 +1028,35 @@ reshape wide inyusp, i(year) j(country) string
 *Compute
 foreach region in QE XB XL XN XF XR QL XS WO {
 	preserve
-		
-		sum inyusp`region' if year==$pastyear
+		keep year inyusp`region'
+		sum inyusp`region' if year==$prev_year
 		loc tf=r(mean)
+		sum inyusp`region' if year==2020
+		loc tp=r(mean)
+		sum inyusp`region' if year==2000
+		loc ts=r(mean)
 		sum inyusp`region' if year==1980
 		loc ti=r(mean)
 		sum inyusp`region' if year==1800
 		loc to=r(mean)
-		
-		tsset year
-		g annual_growth=100*(inyusp`region'/L.inyusp`region'-1)
-		/*
-		forv x=2020/$pastyear{
-			sum annual_growth if year==`x'
-		}
-		*/
-		
-		sum annual_growth if inrange(year,1800,$pastyear )
-		loc growth1800_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1980,$pastyear )
-		loc growth1980_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1980,2000)
-		loc growth1980_2000=r(mean)
-		sum annual_growth if inrange(year,2000,$pastyear )
-		loc growth2000_$pastyear =r(mean)
-		sum annual_growth if inrange(year,2019,$pastyear )
-		loc growth2019_$pastyear =r(mean)
 
 		gen region1="`region'"
 		gen inyusp1800=`to'
 		gen inyusp1980=`ti'
-		gen inyusp$pastyear =`tf'
-		gen growth1800_$pastyear =`growth1800_$pastyear '
-		gen growth1980_$pastyear =`growth1980_$pastyear '
-		gen growth1980_2000      =`growth1980_2000'
-		gen growth2000_$pastyear =`growth2000_$pastyear '
-		gen growth2019_$pastyear =`growth2019_$pastyear '
-
-		keep region inyusp1800 inyusp1980 inyusp$pastyear  growth1800_$pastyear growth1980_$pastyear  growth1980_2000 growth2000_$pastyear  growth2019_$pastyear  
-		duplicates drop
+		gen inyusp2000=`ts'
+		gen inyusp2020=`tp'
+		gen inyusp$prev_year =`tf'
 		
+		gen growth1800_$prev_year = 100*((`tf'/`to')^(1/($prev_year - 1800)) - 1)
+		gen growth1980_2000       = 100*((`ts'/`ti')^(1/(2000-1980))         - 1)
+		gen growth2000_$prev_year = 100*((`tf'/`ts')^(1/($prev_year - 2000)) - 1)
+		gen growth2020_$prev_year = 100*((`tf'/`tp')^(1/($prev_year - 2020)) - 1)
+
+		keep region1 inyusp1800  inyusp1980 inyusp2000 inyusp2020 inyusp$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
+		duplicates drop
+				
 		append using "`temp_reg8'"
-		save`temp_reg8', replace
+		save `temp_reg8', replace
 	restore
 }
 
@@ -1151,10 +1065,10 @@ use "`temp_reg8'", clear
 merge m:1 region1 using "$work_data/import-region-codes-output.dta", nogen keep(master match) keepusing(shortname order)
 sort order
 drop region1 order 
-order shortname
+order shortname inyusp1800  inyusp1980 inyusp2000 inyusp2020 inyusp$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
 
 *Export
-export excel using "$output", sheet("DataT9b", modify) cell(B5) keepcellfmt
+export excel using "$output", sheet("DataT7b", modify) cell(B5) keepcellfmt
 
 	
 
@@ -1172,48 +1086,34 @@ reshape wide inyeux, i(year) j(country) string
 *Compute
 foreach region in QE XB XL XN XF XR QL XS WO {
 	preserve
-		
-		sum inyeux`region' if year==$pastyear
+		keep year inyeux`region'
+		sum inyeux`region' if year==$prev_year
 		loc tf=r(mean)
+		sum inyeux`region' if year==2020
+		loc tp=r(mean)
+		sum inyeux`region' if year==2000
+		loc ts=r(mean)
 		sum inyeux`region' if year==1980
 		loc ti=r(mean)
 		sum inyeux`region' if year==1800
 		loc to=r(mean)
-		
-		tsset year
-		g annual_growth=100*(inyeux`region'/L.inyeux`region'-1)
-		/*
-		forv x=2020/$pastyear{
-			sum annual_growth if year==`x'
-		}
-		*/
-		
-		sum annual_growth if inrange(year,1800,$pastyear )
-		loc growth1800_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1980,$pastyear )
-		loc growth1980_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1980,2000)
-		loc growth1980_2000=r(mean)
-		sum annual_growth if inrange(year,2000,$pastyear )
-		loc growth2000_$pastyear =r(mean)
-		sum annual_growth if inrange(year,2019,$pastyear )
-		loc growth2019_$pastyear =r(mean)
 
 		gen region1="`region'"
 		gen inyeux1800=`to'
 		gen inyeux1980=`ti'
-		gen inyeux$pastyear =`tf'
-		gen growth1800_$pastyear =`growth1800_$pastyear '
-		gen growth1980_$pastyear =`growth1980_$pastyear '
-		gen growth1980_2000      =`growth1980_2000'
-		gen growth2000_$pastyear =`growth2000_$pastyear '
-		gen growth2019_$pastyear =`growth2019_$pastyear '
-
-		keep region inyeux1800 inyeux1980 inyeux$pastyear  growth1800_$pastyear growth1980_$pastyear  growth1980_2000 growth2000_$pastyear  growth2019_$pastyear  
-		duplicates drop
+		gen inyeux2000=`ts'
+		gen inyeux2020=`tp'
+		gen inyeux$prev_year =`tf'
 		
+		gen growth1800_$prev_year = 100*((`tf'/`to')^(1/($prev_year - 1800)) - 1)
+		gen growth1980_2000       = 100*((`ts'/`ti')^(1/(2000-1980))         - 1)
+		gen growth2000_$prev_year = 100*((`tf'/`ts')^(1/($prev_year - 2000)) - 1)
+		gen growth2020_$prev_year = 100*((`tf'/`tp')^(1/($prev_year - 2020)) - 1)
+
+		keep region1 inyeux1800  inyeux1980 inyeux2000 inyeux2020 inyeux$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
+		duplicates drop
 		append using "`temp_reg9'"
-		save`temp_reg9', replace
+		save `temp_reg9', replace
 	restore
 }
 
@@ -1222,10 +1122,10 @@ use "`temp_reg9'", clear
 merge m:1 region1 using "$work_data/import-region-codes-output.dta", nogen keep(master match) keepusing(shortname order)
 sort order
 drop region1 order 
-order shortname
+order shortname inyeux1800  inyeux1980 inyeux2000 inyeux2020 inyeux$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
 
 *Export
-export excel using "$output", sheet("DataT9c", modify) cell(B5) keepcellfmt
+export excel using "$output", sheet("DataT7c", modify) cell(B5) keepcellfmt
 
 
 **# Table 5 USD MER 
@@ -1242,48 +1142,35 @@ reshape wide inyusx, i(year) j(country) string
 *Compute
 foreach region in QE XB XL XN XF XR QL XS WO {
 	preserve
-		
-		sum inyusx`region' if year==$pastyear
+		keep year inyusx`region'
+		sum inyusx`region' if year==$prev_year
 		loc tf=r(mean)
+		sum inyusx`region' if year==2020
+		loc tp=r(mean)
+		sum inyusx`region' if year==2000
+		loc ts=r(mean)
 		sum inyusx`region' if year==1980
 		loc ti=r(mean)
 		sum inyusx`region' if year==1800
 		loc to=r(mean)
-		
-		tsset year
-		g annual_growth=100*(inyusx`region'/L.inyusx`region'-1)
-		/*
-		forv x=2020/$pastyear{
-			sum annual_growth if year==`x'
-		}
-		*/
-		
-		sum annual_growth if inrange(year,1800,$pastyear )
-		loc growth1800_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1980,$pastyear )
-		loc growth1980_$pastyear =r(mean)
-		sum annual_growth if inrange(year,1980,2000)
-		loc growth1980_2000=r(mean)
-		sum annual_growth if inrange(year,2000,$pastyear )
-		loc growth2000_$pastyear =r(mean)
-		sum annual_growth if inrange(year,2019,$pastyear )
-		loc growth2019_$pastyear =r(mean)
 
 		gen region1="`region'"
 		gen inyusx1800=`to'
 		gen inyusx1980=`ti'
-		gen inyusx$pastyear =`tf'
-		gen growth1800_$pastyear =`growth1800_$pastyear '
-		gen growth1980_$pastyear =`growth1980_$pastyear '
-		gen growth1980_2000      =`growth1980_2000'
-		gen growth2000_$pastyear =`growth2000_$pastyear '
-		gen growth2019_$pastyear =`growth2019_$pastyear '
+		gen inyusx2000=`ts'
+		gen inyusx2020=`tp'
+		gen inyusx$prev_year =`tf'
+		
+		gen growth1800_$prev_year = 100*((`tf'/`to')^(1/($prev_year - 1800)) - 1)
+		gen growth1980_2000       = 100*((`ts'/`ti')^(1/(2000-1980))         - 1)
+		gen growth2000_$prev_year = 100*((`tf'/`ts')^(1/($prev_year - 2000)) - 1)
+		gen growth2020_$prev_year = 100*((`tf'/`tp')^(1/($prev_year - 2020)) - 1)
 
-		keep region inyusx1800 inyusx1980 inyusx$pastyear  growth1800_$pastyear growth1980_$pastyear  growth1980_2000 growth2000_$pastyear  growth2019_$pastyear  
+		keep region1 inyusx1800  inyusx1980 inyusx2000 inyusx2020 inyusx$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
 		duplicates drop
 		
 		append using "`temp_reg10'"
-		save`temp_reg10', replace
+		save `temp_reg10', replace
 	restore
 }
 
@@ -1292,10 +1179,10 @@ use "`temp_reg10'", clear
 merge m:1 region1 using "$work_data/import-region-codes-output.dta", nogen keep(master match) keepusing(shortname order)
 sort order
 drop region1 order 
-order shortname
+order shortname inyusx1800  inyusx1980 inyusx2000 inyusx2020 inyusx$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
 
 *Export
-export excel using "$output", sheet("DataT9d", modify) cell(B5) keepcellfmt
+export excel using "$output", sheet("DataT7d", modify) cell(B5) keepcellfmt
 
 
 
@@ -1316,49 +1203,41 @@ foreach r of local regiones {
 	use "$work_data/coreterritories_dataset.dta", clear
 	
 	keep if (region1=="`r'")
-	keep country region1 inyusx year
+	keep country region1 inyeup year
 	levelsof country, local(countries)
 		
-	reshape wide inyusx, i(year) j(country) string
+	reshape wide inyeup, i(year) j(country) string
 		
 	*Compute
 	foreach c of local countries {
 		preserve
-			keep year inyusx`c'
-			sum inyusx`c' if year==$pastyear
+			keep year inyeup`c'
+			sum inyeup`c' if year==$prev_year
 			loc tf=r(mean)
-			sum inyusx`c' if year==1980
+			sum inyeup`region' if year==2020
+			loc tp=r(mean)
+			sum inyeup`c' if year==2000
+			loc ts=r(mean)
+			sum inyeup`c' if year==1980
 			loc ti=r(mean)
-			sum inyusx`c' if year==1800
+			sum inyeup`c' if year==1800
 			loc to=r(mean)
 
-			tsset year
-			g annual_growth=100*(inyusx`c'/L.inyusx`c'-1)
-
-			sum annual_growth if inrange(year,1800,$pastyear )
-			loc growth1800_$pastyear =r(mean)
-			sum annual_growth if inrange(year,1980,$pastyear )
-			loc growth1980_$pastyear =r(mean)
-			sum annual_growth if inrange(year,1980,2000)
-			loc growth1980_2000=r(mean)
-			sum annual_growth if inrange(year,2000,$pastyear )
-			loc growth2000_$pastyear =r(mean)
-			sum annual_growth if inrange(year,2019,$pastyear )
-			loc growth2019_$pastyear =r(mean)
-				
-			gen region="`c'"
-			gen inyusx1800=`to'
-			gen inyusx1980=`ti'
-			gen inyusx$pastyear =`tf'
-			gen growth1800_$pastyear = `growth1800_$pastyear'
-			gen growth1980_$pastyear =`growth1980_$pastyear'
-			gen growth1980_2000=`growth1980_2000'
-			gen growth2000_$pastyear =`growth2000_$pastyear'
-			gen growth2019_$pastyear =`growth2019_$pastyear '
+			gen country="`c'"
+			gen inyeup1800=`to'
+			gen inyeup1980=`ti'
+			gen inyeup2000=`ts'
+			gen inyeup2020=`tp'
+			gen inyeup$prev_year =`tf'
 			
-			keep region inyusx1800 inyusx1980 inyusx$pastyear  growth1800_$pastyear growth1980_$pastyear growth1980_2000 growth2000_$pastyear growth2019_$pastyear
+			gen growth1800_$prev_year = 100*((`tf'/`to')^(1/($prev_year - 1800)) - 1)
+			gen growth1980_2000       = 100*((`ts'/`ti')^(1/(2000-1980))         - 1)
+			gen growth2000_$prev_year = 100*((`tf'/`ts')^(1/($prev_year - 2000)) - 1)
+			gen growth2020_$prev_year = 100*((`tf'/`tp')^(1/($prev_year - 2020)) - 1)
+
+			keep country inyeup1800  inyeup1980 inyeup2000 inyeup2020 inyeup$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
 			duplicates drop
-				
+		
 			append using "`temp_`r''"
 			save`temp_`r'', replace
 		restore
@@ -1366,7 +1245,6 @@ foreach r of local regiones {
 	*Append in exporting format
 	use  "`temp_`r''", clear
 
-	ren region country
 	merge m:1 country using "$work_data/import-core-country-codes-output.dta", nogen keep(master match) keepusing(shortname region1)
 	
 	replace region1="XR" if missing(region1) & country=="OA"
@@ -1398,10 +1276,8 @@ foreach r of local regiones {
 	
 	merge m:1 region1 using "$work_data/import-region-codes-output.dta", nogen keep(match master) keepusing(shortname order)
 	rename shortname regionname
-	order  regionname countryname inyusx1800 inyusx1980 inyusx$pastyear growth1800_$pastyear growth1980_$pastyear growth1980_2000 growth2000_$pastyear growth2019_$pastyear
-	keep regionname countryname inyusx1800 inyusx1980 inyusx$pastyear  growth1800_$pastyear  growth1980_$pastyear growth1980_2000 growth2000_$pastyear growth2019_$pastyear order
-	
-	
+	order regionname countryname inyeup1800  inyeup1980 inyeup2000 inyeup2020 inyeup$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year growth2020_$prev_year
+	keep  regionname countryname inyeup1800  inyeup1980 inyeup2000 inyeup2020 inyeup$prev_year growth1800_$prev_year growth1980_2000 growth2000_$prev_year  growth2020_$prev_year order
 	
 	append using "`temp_asi2'"
 	save "`temp_asi2'", replace
@@ -1409,6 +1285,6 @@ foreach r of local regiones {
  }
 
 u "`temp_asi2'", clear
-gsort order  -inyusx$pastyear
+gsort order  - inyeup$prev_year
 drop order
-export excel using "$output", sheet("DataT10", modify) cell(B5) keepcellfmt 
+export excel using "$output", sheet("DataT8", modify) cell(B5) keepcellfmt 

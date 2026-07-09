@@ -16,7 +16,7 @@ tempfile ppp_mer_2021
 save `ppp_mer_2021'
 
 use "$work_data/main_dataset.dta", clear
-keep if year==$pastyear
+keep if year==$prev_year
 drop if country=="WO"
 
 merge m:1 region1 using "$work_data/import-region-codes-output.dta", nogen keep(master match) keepusing(shortname)
@@ -25,7 +25,7 @@ rename shortname region1
 
 
 gen mnninc_pasty_ppp_eur_pc = mnninc_pasty_ppp_eur/npopul
-gen mnninc_mer_ppp_ratio   = mnninc_mer_eur/mnninc_pasty_ppp_eur
+gen mnninc_mer_ppp_ratio    = mnninc_mer_eur/mnninc_pasty_ppp_eur
 
 sort mnninc_pasty_ppp_eur_pc 
 egen seq=seq()
@@ -57,23 +57,21 @@ drop _merge
 
 gsort -mnninc_pasty_ppp_eur_pc
 
-g PPP_to_MER_2021_EUR=ppp_2021_eur/mer_2021_eur
-g PPP_to_MER_2021_USD=ppp_2021_usd/mer_2021_usd	 
+gen PPP_to_MER_2021_EUR=ppp_2021_eur/mer_2021_eur
+gen PPP_to_MER_2021_USD=ppp_2021_usd/mer_2021_usd	 
 
 
-g mcomnx_ppp_pasty_usd=(/*nipi**/mcomnx)/ppp_usd 
-g mpinnx_ppp_pasty_usd=(/*nipi**/mpinnx)/ppp_usd 
+gen mcomnx_ppp_pasty_usd=(/*nipi**/mcomnx)/ppp_usd 
+gen mpinnx_ppp_pasty_usd=(/*nipi**/mpinnx)/ppp_usd 
 
 
 
-order countryname mnninc_pasty_ppp_eur_pc percentile region1   mnninc_pasty_ppp_eur npopul country mnnfin_pasty_ppp_usd mpinnx_ppp_pasty_usd mcomnx_ppp_pasty_usd mnwnxa_pasty_ppp_usd /// 
-mndpro_pasty_ppp_usd mgdpro_pasty_ppp_usd 	PPP_to_MER_pasty_EUR PPP_to_MER_pasty_USD PPP_to_MER_2021_EUR PPP_to_MER_2021_USD nnfin_ndinc scinx_ndinc	
+order countryname mnninc_pasty_ppp_eur_pc percentile region1   mnninc_pasty_ppp_eur npopul country mnnfin_pasty_ppp_eur mpinnx_pasty_ppp_eur mcomnx_pasty_ppp_eur mnwnxa_pasty_ppp_eur /// 
+mndpro_pasty_ppp_eur mgdpro_pasty_ppp_eur 	PPP_to_MER_pasty_EUR PPP_to_MER_pasty_USD PPP_to_MER_2021_EUR PPP_to_MER_2021_USD nnfin_ndinc scinx_ndinc	
 
-keep countryname mnninc_pasty_ppp_eur_pc percentile region1   mnninc_pasty_ppp_eur npopul country mnnfin_pasty_ppp_usd mpinnx_ppp_pasty_usd mcomnx_ppp_pasty_usd mnwnxa_pasty_ppp_usd ///
-mndpro_pasty_ppp_usd mgdpro_pasty_ppp_usd 	PPP_to_MER_pasty_EUR PPP_to_MER_pasty_USD PPP_to_MER_2021_EUR PPP_to_MER_2021_USD nnfin_ndinc scinx_ndinc
+keep countryname mnninc_pasty_ppp_eur_pc percentile region1    mnninc_pasty_ppp_eur npopul country mnnfin_pasty_ppp_eur mpinnx_pasty_ppp_eur mcomnx_pasty_ppp_eur mnwnxa_pasty_ppp_eur /// 
+mndpro_pasty_ppp_eur mgdpro_pasty_ppp_eur 	PPP_to_MER_pasty_EUR PPP_to_MER_pasty_USD PPP_to_MER_2021_EUR PPP_to_MER_2021_USD nnfin_ndinc scinx_ndinc
 
 
 *Export 
 export excel using "$output", sheet("Appendix1", modify) cell(A4) keepcellfmt
-
-

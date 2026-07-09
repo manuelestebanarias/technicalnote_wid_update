@@ -1,5 +1,243 @@
+clear all 
+
+foreach s in _pasty_ppp_eur_cur _mer_eur _pasty_ppp_usd_cur _mer_usd {
+	tempfile temp_reg14`s'
+	save `temp_reg14`s'', emptyok
+}
+clear all
+gen region1=""
+tempfile temp_reg140
+save `temp_reg140', emptyok
 
 
+/*------------------------------------------------------------------------------
+Table 14. Current Account (1980-2023) USD MER
+------------------------------------------------------------------------------*/
+*Import 
+use "$work_data/coreterritories_dataset.dta",clear
+keep if year==$prev_year 
+keep country iny*
+
+rename country region1
+
+tempfile price
+save `price'
+
+
+*Import data
+use "$work_data/main_dataset.dta",clear
+keep if year==$prev_year 
+
+keep if !missing(region5)
+
+keep country year mpinnx* mcomnx* mtbnnx* mtaxnx* mscinx* mncanx* region1 region5 order
+
+sort country year
+
+
+preserve
+	collapse (sum)  mpinnx* mcomnx* mtbnnx* mtaxnx* mscinx* mncanx* , by(year region5)
+	drop if missing(region5)
+	gen order=9
+	rename region5 region1
+	tempfile WO_all
+	save `WO_all'
+restore
+
+*Compute for regions	
+collapse (sum)  mpinnx* mcomnx* mtbnnx* mtaxnx* mscinx* mncanx* , by(region1 order)
+
+append using "`WO_all'"
+
+*Format for Excel
+foreach x in  mpinnx mcomnx mtbnnx mtaxnx mscinx mncanx {
+foreach v in pasty_ppp_eur_cur mer_eur pasty_ppp_usd_cur mer_usd {
+	replace `x'_`v' = `x'_`v' /1000000000
+	}
+}
+
+merge 1:1 region1 using "`price'", nogenerate keep(match master)
+
+merge m:1 region1 using "$work_data/import-region-codes-output.dta", nogen keep(master match) keepusing(shortname)
+
+sort order
+keep  shortname  *_pasty_ppp_eur_cur  *_mer_eur *_pasty_ppp_usd_cur *_mer_usd  order
+
+
+
+
+preserve
+	keep  shortname  *_pasty_ppp_eur*  *_mer_eur 
+	order shortname mpinnx_pasty_ppp_eur mcomnx_pasty_ppp_eur mtbnnx_pasty_ppp_eur mtaxnx_pasty_ppp_eur mscinx_pasty_ppp_eur mncanx_pasty_ppp_eur mpinnx_mer_eur mcomnx_mer_eur mtbnnx_mer_eur mtaxnx_mer_eur mscinx_mer_eur mncanx_mer_eur
+
+	export excel using "$output", sheet("DataT12a", modify) cell(B5) keepcellfmt
+	*export excel using "$output", sheet("DataT1_PPPMER", modify) cell(B5) keepcellfmt
+restore
+
+preserve
+	keep  shortname  *_pasty_ppp_usd*  *_mer_usd 
+	order shortname mpinnx_pasty_ppp_usd mcomnx_pasty_ppp_usd mtbnnx_pasty_ppp_usd mtaxnx_pasty_ppp_usd mscinx_pasty_ppp_usd mncanx_pasty_ppp_usd mpinnx_mer_usd mcomnx_mer_usd mtbnnx_mer_usd mtaxnx_mer_usd mscinx_mer_usd mncanx_mer_usd
+
+	export excel using "$output", sheet("DataT12b", modify) cell(B5) keepcellfmt
+	*export excel using "$output", sheet("DataT1_PPPMER", modify) cell(B5) keepcellfmt
+restore
+
+
+/*------------------------------------------------------------------------------
+Table 15. Foreing wealth (1980-2023) USD MER
+------------------------------------------------------------------------------*/
+
+
+*Import data
+use "$work_data/main_dataset.dta", clear
+drop if strpos(country,"WO")
+
+keep country year mnwnxa* mndpro* region1 region5 order
+
+keep country year *_pasty_ppp_eur_cur *_pasty_ppp_usd_cur  *_mer_usd *_mer_eur region1 region5 order
+sort country year
+
+preserve
+	collapse (sum)  m*, by(year region5)
+	drop if missing(region5)
+	gen order=9
+	rename region5 region1
+	tempfile WO_all
+	save `WO_all'
+restore
+*Compute for regions	
+collapse (sum)  m*, by(year region1 order)
+
+append using "`WO_all'"
+
+
+*Format for Excel
+foreach x in  mnwnxa {
+	foreach v in pasty_ppp_eur_cur mer_eur pasty_ppp_usd_cur mer_usd {
+		gen `x'_`v'_sh = `x'_`v' /mndpro_`v'
+		replace `x'_`v' = `x'_`v' /1000000000
+		
+
+	}
+}
+
+drop order mndpro*
+reshape wide mnwnxa*, i(year) j(region1) string
+
+keep year *WO *QE *XB *XL *XN *XF *XR *QL *XS
+
+
+*Compute
+foreach s in _pasty_ppp_eur_cur _mer_eur _pasty_ppp_usd_cur _mer_usd {
+	foreach region in WO QE XB XL XN XF XR QL XS {
+		preserve
+			keep year mnwnxa`s'`region' mnwnxa`s'_sh`region'
+			sum mnwnxa`s'`region' if year==$prev_year
+			loc tf=r(mean)
+			sum mnwnxa`s'`region' if year==2020
+			loc tp=r(mean)
+			sum mnwnxa`s'`region' if year==2000
+			loc ts=r(mean)
+			sum mnwnxa`s'`region' if year==1980
+			loc ti=r(mean)
+			sum mnwnxa`s'`region' if year==1800
+			loc to=r(mean)
+			
+			sum mnwnxa`s'_sh`region' if year==$prev_year
+			loc tf_s=r(mean)
+			sum mnwnxa`s'_sh`region' if year==2020
+			loc tp_s=r(mean)
+			sum mnwnxa`s'_sh`region' if year==2000
+			loc ts_s=r(mean)
+			sum mnwnxa`s'_sh`region' if year==1980
+			loc ti_s=r(mean)
+			sum mnwnxa`s'_sh`region' if year==1800
+			loc to_s=r(mean)
+			
+			gen region1="`region'"
+			gen mnwnxa1800`s'=`to'
+			gen mnwnxa1980`s'=`ti'
+			gen mnwnxa2000`s'=`ts'
+			gen mnwnxa2020`s'=`tp'
+			gen mnwnxa$prev_year`s' =`tf'
+			
+			gen mnwnxa_sh1800`s'=`to_s'
+			gen mnwnxa_sh1980`s'=`ti_s'
+			gen mnwnxa_sh2000`s'=`ts_s'
+			gen mnwnxa_sh2020`s'=`tp_s'
+			gen mnwnxa_sh$prev_year`s' =`tf_s'
+			
+			/*
+			gen change1800_$prev_year`s' = `tf' - `to'
+			gen change1980_2000`s'       = `ts' - `ti'
+			gen change2000_2020`s'       = `tp' - `ts'
+			gen change2020_$prev_year`s' = `tf' - `tp'
+			*/
+			keep region mnwnxa1800  mnwnxa1980 mnwnxa2000 mnwnxa2020 mnwnxa$prev_year mnwnxa_sh1800  mnwnxa_sh1980 mnwnxa_sh2000 mnwnxa_sh2020 mnwnxa_sh$prev_year /*change1800_$prev_year change1980_2000 change2000_2020 change2020_$prev_year*/
+			duplicates drop
+
+			
+			append using "`temp_reg14`s''"
+			save "`temp_reg14`s''", replace
+		restore
+	}
+}
+*Append in exporting format
+
+use "`temp_reg140'", clear
+foreach s in _pasty_ppp_eur_cur _mer_eur _pasty_ppp_usd_cur _mer_usd {
+	merge 1:1 region1 using  "`temp_reg14`s''", nogen
+}
+
+
+merge m:1 region1 using "$work_data/import-region-codes-output.dta", nogen keep(master match) keepusing(shortname order)
+sort order
+drop region1 order 
+order shortname
+
+
+
+preserve
+	keep  shortname *mer_eur*
+	
+
+	export excel using "$output", sheet("DataT13a", modify) cell(B5) keepcellfmt
+
+restore
+
+preserve
+	keep  shortname  *mer_usd* 
+
+	export excel using "$output", sheet("DataT13b", modify) cell(B5) keepcellfmt
+
+restore
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 **# Figure 3a
 /*------------------------------------------------------------------------------
 Figure 3a. Net Foreign Wealth as % National Income (MER) by World Region 1970-$pastyear

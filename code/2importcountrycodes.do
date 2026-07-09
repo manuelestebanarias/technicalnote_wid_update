@@ -4,7 +4,7 @@
 
 
 // ---------- 1. import core countries
-import excel "$codes_dictionary", sheet("Country_List") cellrange(A2:K219) firstrow clear
+import excel "$codes_dictionary", sheet("Country_List") cellrange(A2:L219) firstrow clear
 
 drop Alpha3  ISONumeric region region2 
 rename (Alpha2 TitleName ShortName) (country titlename shortname)
@@ -119,7 +119,7 @@ restore
 preserve
 	keep if corecountry == 1
 	drop if country=="WO"
-	local n_years = $pastyear - 1970 + 1
+	local n_years = $prev_year- 1970 + 1
 	expand `n_years'
 	sort country 
 	bysort country: gen year = 1970 + _n - 1
