@@ -11,7 +11,10 @@ save `temp_reg140', emptyok
 
 
 /*------------------------------------------------------------------------------
-Table 14. Current Account (1980-2023) USD MER
+Table 13a. Current Account by World Region PPP € (2025)
+Table 13b. Current Account by World Region PPP $ (2025)
+Table 13c. Current Account by World Region MER € (2025)
+Table 13d. Current Account by World Region MER $ (2025)
 ------------------------------------------------------------------------------*/
 *Import 
 use "$work_data/coreterritories_dataset.dta",clear
@@ -30,13 +33,13 @@ keep if year==$prev_year
 
 keep if !missing(region5)
 
-keep country year mpinnx* mcomnx* mtbnnx* mtaxnx* mscinx* mncanx* region1 region5 order
+keep country year mpinnx* mcomnx* mtbnnx* mtaxnx* mscinx* mncanx* mgdpro* region1 region5 order
 
 sort country year
 
 
 preserve
-	collapse (sum)  mpinnx* mcomnx* mtbnnx* mtaxnx* mscinx* mncanx* , by(year region5)
+	collapse (sum)  mpinnx* mcomnx* mtbnnx* mtaxnx* mscinx* mncanx* mgdpro*, by(year region5)
 	drop if missing(region5)
 	gen order=9
 	rename region5 region1
@@ -45,13 +48,14 @@ preserve
 restore
 
 *Compute for regions	
-collapse (sum)  mpinnx* mcomnx* mtbnnx* mtaxnx* mscinx* mncanx* , by(region1 order)
+collapse (sum)  mpinnx* mcomnx* mtbnnx* mtaxnx* mscinx* mncanx* mgdpro*, by(region1 order)
 
 append using "`WO_all'"
 
 *Format for Excel
 foreach x in  mpinnx mcomnx mtbnnx mtaxnx mscinx mncanx {
 foreach v in pasty_ppp_eur_cur mer_eur pasty_ppp_usd_cur mer_usd {
+	gen shr_`x'_`v' = `x'_`v' /mgdpro_`v'
 	replace `x'_`v' = `x'_`v' /1000000000
 	}
 }
@@ -62,29 +66,46 @@ merge m:1 region1 using "$work_data/import-region-codes-output.dta", nogen keep(
 
 sort order
 keep  shortname  *_pasty_ppp_eur_cur  *_mer_eur *_pasty_ppp_usd_cur *_mer_usd  order
-
+drop mgdpro*
 
 
 
 preserve
-	keep  shortname  *_pasty_ppp_eur*  *_mer_eur 
-	order shortname mpinnx_pasty_ppp_eur mcomnx_pasty_ppp_eur mtbnnx_pasty_ppp_eur mtaxnx_pasty_ppp_eur mscinx_pasty_ppp_eur mncanx_pasty_ppp_eur mpinnx_mer_eur mcomnx_mer_eur mtbnnx_mer_eur mtaxnx_mer_eur mscinx_mer_eur mncanx_mer_eur
+	keep  shortname  *_pasty_ppp_eur*  
+	order shortname mpinnx_pasty_ppp_eur mcomnx_pasty_ppp_eur mtbnnx_pasty_ppp_eur mtaxnx_pasty_ppp_eur mscinx_pasty_ppp_eur mncanx_pasty_ppp_eur shr_mpinnx_pasty_ppp_eur shr_mcomnx_pasty_ppp_eur shr_mtbnnx_pasty_ppp_eur shr_mtaxnx_pasty_ppp_eur shr_mscinx_pasty_ppp_eur shr_mncanx_pasty_ppp_eur 
+	
 
-	export excel using "$output", sheet("DataT12a", modify) cell(B5) keepcellfmt
-	*export excel using "$output", sheet("DataT1_PPPMER", modify) cell(B5) keepcellfmt
+	export excel using "$output", sheet("DataT13a", modify) cell(B5) keepcellfmt
 restore
 
 preserve
-	keep  shortname  *_pasty_ppp_usd*  *_mer_usd 
-	order shortname mpinnx_pasty_ppp_usd mcomnx_pasty_ppp_usd mtbnnx_pasty_ppp_usd mtaxnx_pasty_ppp_usd mscinx_pasty_ppp_usd mncanx_pasty_ppp_usd mpinnx_mer_usd mcomnx_mer_usd mtbnnx_mer_usd mtaxnx_mer_usd mscinx_mer_usd mncanx_mer_usd
-
-	export excel using "$output", sheet("DataT12b", modify) cell(B5) keepcellfmt
-	*export excel using "$output", sheet("DataT1_PPPMER", modify) cell(B5) keepcellfmt
+	keep  shortname  *_pasty_ppp_usd*  
+	order shortname mpinnx_pasty_ppp_usd mcomnx_pasty_ppp_usd mtbnnx_pasty_ppp_usd mtaxnx_pasty_ppp_usd mscinx_pasty_ppp_usd mncanx_pasty_ppp_usd shr_mpinnx_pasty_ppp_usd shr_mcomnx_pasty_ppp_usd shr_mtbnnx_pasty_ppp_usd shr_mtaxnx_pasty_ppp_usd shr_mscinx_pasty_ppp_usd shr_mncanx_pasty_ppp_usd 
+	
+	export excel using "$output", sheet("DataT13b", modify) cell(B5) keepcellfmt
 restore
 
+preserve
+	keep  shortname  *_mer_eur*  
+	order shortname  mpinnx_mer_eur mcomnx_mer_eur mtbnnx_mer_eur mtaxnx_mer_eur mscinx_mer_eur mncanx_mer_eur shr_mpinnx_mer_eur shr_mcomnx_mer_eur shr_mtbnnx_mer_eur shr_mtaxnx_mer_eur shr_mscinx_mer_eur shr_mncanx_mer_eur
+
+	export excel using "$output", sheet("DataT13c", modify) cell(B5) keepcellfmt
+restore
+
+
+
+preserve
+	keep  shortname  *_mer_usd* 
+	order shortname mpinnx_mer_usd mcomnx_mer_usd mtbnnx_mer_usd mtaxnx_mer_usd mscinx_mer_usd mncanx_mer_usd shr_mpinnx_mer_usd shr_mcomnx_mer_usd shr_mtbnnx_mer_usd shr_mtaxnx_mer_usd shr_mscinx_mer_usd shr_mncanx_mer_usd
+
+	export excel using "$output", sheet("DataT13d", modify) cell(B5) keepcellfmt
+restore
 
 /*------------------------------------------------------------------------------
-Table 15. Foreing wealth (1980-2023) USD MER
+Table 14a. Net foreign Assets PPP € 2025 by World Regions (1980-2025) 
+Table 14d. Net foreign Assets MER$  by World Regions (1980-2025) 
+Table 14c. Net foreign Assets MER €  by World Regions (1980-2025) 
+Table 14d. Net foreign Assets MER$  by World Regions (1980-2025) 
 ------------------------------------------------------------------------------*/
 
 
@@ -196,19 +217,33 @@ drop region1 order
 order shortname
 
 
+preserve
+	keep  shortname *pasty_ppp_eur*
+	
+
+	export excel using "$output", sheet("DataT14a", modify) cell(B5) keepcellfmt
+
+restore
+
+preserve
+	keep  shortname  **pasty_ppp_usd** 
+
+	export excel using "$output", sheet("DataT14b", modify) cell(B5) keepcellfmt
+
+restore
 
 preserve
 	keep  shortname *mer_eur*
 	
 
-	export excel using "$output", sheet("DataT13a", modify) cell(B5) keepcellfmt
+	export excel using "$output", sheet("DataT14c", modify) cell(B5) keepcellfmt
 
 restore
 
 preserve
 	keep  shortname  *mer_usd* 
 
-	export excel using "$output", sheet("DataT13b", modify) cell(B5) keepcellfmt
+	export excel using "$output", sheet("DataT14d", modify) cell(B5) keepcellfmt
 
 restore
 
@@ -216,13 +251,217 @@ restore
 
 
 
+/*------------------------------------------------------------------------------
+Table 15a. National Non-financial Assets by World Region PPP € (2025)
+Table 15b. National Non-financial Assets by World Region PPP $ (2025)
+Table 15c. National Non-financial Assets by World Region MER € (2025)
+Table 15d. National Non-financial Assets by World Region MER $ (2025)
+------------------------------------------------------------------------------*/
+
+use "$work_data/main_dataset.dta",clear
+keep if year==$prev_year 
+drop if country=="WO"
+
+keep country region1  mnwnfa_pasty_ppp_eur mnwnfa_mer_eur mnwnfa_pasty_ppp_usd mnwnfa_mer_usd mnwhou_pasty_ppp_eur mnwhou_mer_eur mnwhou_pasty_ppp_usd mnwhou_mer_usd mnwbus_pasty_ppp_eur mnwbus_mer_eur mnwbus_pasty_ppp_usd mnwbus_mer_usd mgdpro* order
+
+*Compute for world
+preserve
+	collapse (sum) mnwnfa_pasty_ppp_eur mnwnfa_mer_eur mnwnfa_pasty_ppp_usd mnwnfa_mer_usd mnwhou_pasty_ppp_eur mnwhou_mer_eur mnwhou_pasty_ppp_usd mnwhou_mer_usd mnwbus_pasty_ppp_eur mnwbus_mer_eur mnwbus_pasty_ppp_usd mnwbus_mer_usd mgdpro_pasty_ppp_eur mgdpro_mer_eur mgdpro_pasty_ppp_usd mgdpro_mer_usd
+	
+	gen region1 ="WO"
+	gen order= 9
+	
+	tempfile  world
+	save     `world'
+restore
+
+
+collapse (sum) mnwnfa_pasty_ppp_eur mnwnfa_mer_eur mnwnfa_pasty_ppp_usd mnwnfa_mer_usd mnwhou_pasty_ppp_eur mnwhou_mer_eur mnwhou_pasty_ppp_usd mnwhou_mer_usd mnwbus_pasty_ppp_eur mnwbus_mer_eur mnwbus_pasty_ppp_usd mnwbus_mer_usd mgdpro_pasty_ppp_eur mgdpro_mer_eur mgdpro_pasty_ppp_usd mgdpro_mer_usd, by(region1 order)
+
+append using "`world'"
+sort order
+
+
+foreach v in pasty_ppp_eur mer_eur pasty_ppp_usd mer_usd {
+	gen  double mnwnfa_`v'_gdpsh=mnwnfa_`v'/mgdpro_`v'
+	gen  double mnwhou_`v'_gdpsh=mnwhou_`v'/mgdpro_`v'
+	gen  double mnwbus_`v'_gdpsh= mnwbus_`v'/mgdpro_`v'
+	drop mgdpro_`v'
+	
+}
+
+
+foreach v in pasty_ppp_eur mer_eur pasty_ppp_usd mer_usd {
+	gen aux1 = mnwnfa_`v' if region1=="WO"
+	egen mnwnfa_`v'_wo = mode(aux1)
+	gen aux2 = mnwhou_`v' if region1=="WO"
+	egen mnwhou_`v'_wo = mode(aux2)
+	gen aux3 = mnwbus_`v' if region1=="WO"
+	egen mnwbus_`v'_wo = mode(aux3)
+	gen  double mnwnfa_`v'_sh_con=mnwnfa_`v'/mnwnfa_`v'_wo
+	gen  double mnwhou_`v'_sh_con=mnwhou_`v'/mnwhou_`v'_wo
+	gen  double mnwbus_`v'_sh_con= mnwbus_`v'/ mnwbus_`v'_wo
+	drop *_`v'_wo aux*
+	
+}
 
 
 
+*Format for Excel
+foreach v in pasty_ppp_eur mer_eur pasty_ppp_usd mer_usd {
+	replace mnwnfa_`v' = mnwnfa_`v' /1000000000
+	replace mnwhou_`v' = mnwhou_`v' /1000000000
+	replace  mnwbus_`v' =  mnwbus_`v' /1000000000
+}
+
+
+merge m:1 region1 using "$work_data/import-region-codes-output.dta", nogen keep(master match) keepusing(shortname)
+
+sort order
 
 
 
+preserve
+	keep  shortname *pasty_ppp_eur *pasty_ppp_eur_gdpsh
+	order shortname  mnwhou_pasty_ppp_eur mnwbus_pasty_ppp_eur mnwnfa_pasty_ppp_eur  mnwhou_pasty_ppp_eur_gdpsh mnwbus_pasty_ppp_eur_gdpsh mnwnfa_pasty_ppp_eur_gdpsh
+	
 
+	export excel using "$output", sheet("DataT15a", modify) cell(B5) keepcellfmt
+restore
+
+preserve
+	keep  shortname *pasty_ppp_usd *pasty_ppp_usd_gdpsh
+	order shortname  mnwhou_pasty_ppp_usd mnwbus_pasty_ppp_usd mnwnfa_pasty_ppp_usd  mnwhou_pasty_ppp_usd_gdpsh mnwbus_pasty_ppp_usd_gdpsh mnwnfa_pasty_ppp_usd_gdpsh
+
+
+	export excel using "$output", sheet("DataT15b", modify) cell(B5) keepcellfmt
+restore
+
+preserve
+	keep  shortname *mer_eur *mer_eur_gdpsh
+	order shortname mnwhou_mer_eur mnwbus_mer_eur  mnwnfa_mer_eur mnwhou_mer_eur_gdpsh mnwbus_mer_eur_gdpsh mnwnfa_mer_eur_gdpsh
+
+	
+
+	export excel using "$output", sheet("DataT15c", modify) cell(B5) keepcellfmt
+restore
+
+preserve
+	keep  shortname *mer_usd *mer_usd_gdpsh
+	order shortname mnwhou_mer_usd mnwbus_mer_usd mnwnfa_mer_usd  mnwhou_mer_usd_gdpsh mnwbus_mer_usd_gdpsh mnwnfa_mer_usd_gdpsh
+
+
+	export excel using "$output", sheet("DataT15d", modify) cell(B5) keepcellfmt
+restore
+
+/*------------------------------------------------------------------------------
+Table 16a. National Capital shares by World Region PPP € (2025)
+Table 16b. National Capital shares by World Region PPP $ (2025)
+Table 16c. National Capital shares by World Region MER € (2025)
+Table 16d. National Capital shares by World Region MER $ (2025)
+------------------------------------------------------------------------------*/
+
+*      gsrgo gsrco gmxhn gsrhn
+*gvato gvago gvaco gvahn
+
+use "$work_data/main_dataset.dta",clear
+keep if year==$prev_year 
+drop if country=="WO"
+
+keep country region1  mgsrgo_pasty_ppp_eur  mgsrgo_mer_eur  mgsrgo_pasty_ppp_usd  mgsrgo_mer_usd  mgsrco_pasty_ppp_eur  mgsrco_mer_eur  mgsrco_pasty_ppp_usd  mgsrco_mer_usd  mgmxhn_pasty_ppp_eur  mgmxhn_mer_eur  mgmxhn_pasty_ppp_usd  mgmxhn_mer_usd  mgsrhn_pasty_ppp_eur  mgsrhn_mer_eur  mgsrhn_pasty_ppp_usd  mgsrhn_mer_usd  mgvato_pasty_ppp_eur mgvato_mer_eur mgvato_pasty_ppp_usd mgvato_mer_usd  mgvago_pasty_ppp_eur mgvago_mer_eur mgvago_pasty_ppp_usd mgvago_mer_usd  mgvaco_pasty_ppp_eur mgvaco_mer_eur mgvaco_pasty_ppp_usd mgvaco_mer_usd  mgvahn_pasty_ppp_eur mgvahn_mer_eur mgvahn_pasty_ppp_usd mgvahn_mer_usd mgdpro* order
+
+*Compute for world
+preserve
+	collapse (sum) mgsrgo_pasty_ppp_eur  mgsrgo_mer_eur  mgsrgo_pasty_ppp_usd  mgsrgo_mer_usd  mgsrco_pasty_ppp_eur  mgsrco_mer_eur  mgsrco_pasty_ppp_usd  mgsrco_mer_usd  mgmxhn_pasty_ppp_eur  mgmxhn_mer_eur  mgmxhn_pasty_ppp_usd  mgmxhn_mer_usd  mgsrhn_pasty_ppp_eur  mgsrhn_mer_eur  mgsrhn_pasty_ppp_usd  mgsrhn_mer_usd  mgvato_pasty_ppp_eur mgvato_mer_eur mgvato_pasty_ppp_usd mgvato_mer_usd  mgvago_pasty_ppp_eur mgvago_mer_eur mgvago_pasty_ppp_usd mgvago_mer_usd  mgvaco_pasty_ppp_eur mgvaco_mer_eur mgvaco_pasty_ppp_usd mgvaco_mer_usd  mgvahn_pasty_ppp_eur mgvahn_mer_eur mgvahn_pasty_ppp_usd mgvahn_mer_usd mgdpro_pasty_ppp_eur mgdpro_mer_eur mgdpro_pasty_ppp_usd mgdpro_mer_usd
+	
+	gen region1 ="WO"
+	gen order= 9
+	
+	tempfile  world
+	save     `world'
+restore
+
+
+collapse (sum) mgsrgo_pasty_ppp_eur  mgsrgo_mer_eur  mgsrgo_pasty_ppp_usd  mgsrgo_mer_usd  mgsrco_pasty_ppp_eur  mgsrco_mer_eur  mgsrco_pasty_ppp_usd  mgsrco_mer_usd  mgmxhn_pasty_ppp_eur  mgmxhn_mer_eur  mgmxhn_pasty_ppp_usd  mgmxhn_mer_usd  mgsrhn_pasty_ppp_eur  mgsrhn_mer_eur  mgsrhn_pasty_ppp_usd  mgsrhn_mer_usd  mgvato_pasty_ppp_eur mgvato_mer_eur mgvato_pasty_ppp_usd mgvato_mer_usd  mgvago_pasty_ppp_eur mgvago_mer_eur mgvago_pasty_ppp_usd mgvago_mer_usd  mgvaco_pasty_ppp_eur mgvaco_mer_eur mgvaco_pasty_ppp_usd mgvaco_mer_usd  mgvahn_pasty_ppp_eur mgvahn_mer_eur mgvahn_pasty_ppp_usd mgvahn_mer_usd mgdpro_pasty_ppp_eur mgdpro_mer_eur mgdpro_pasty_ppp_usd mgdpro_mer_usd, by(region1 order)
+
+append using "`world'"
+sort order
+
+
+foreach v in pasty_ppp_eur mer_eur pasty_ppp_usd mer_usd {
+	* Gvato as a share of GDP
+	gen  double mgvato_`v'_gdp=mgvato_`v'/mgdpro_`v'
+	*Capital share of the economy (= (gsrco + gsrhn + gsrgo + 0.4*gmxhn) / gvato)
+	gen  double k_shr_`v'_gvato = (mgsrco_`v' + mgsrhn_`v' + mgsrgo_`v' + (0.4 * mgmxhn_`v')) / mgvato_`v'
+	
+	*Capital share in Goverment
+	gen  double mgsrgo_`v'_gvago= mgsrgo_`v'/mgvago_`v'
+	
+	*Capital share in Corporate
+	gen  double mgsrco_`v'_gvaco= mgsrco_`v'/mgvaco_`v'
+	*Capital share in houshold suprplus
+	gen  double mgmxhn_`v'_gvahn= mgmxhn_`v'/mgvahn_`v'
+	
+	*Capital share in miex income surplus
+	gen  double mgsrhn_`v'_gvahn= mgsrhn_`v'/mgvahn_`v'
+	
+	
+}
+drop mgdpro* mgvago* mgvaco* mgvahn*
+
+
+
+*Format for Excel
+foreach v in pasty_ppp_eur mer_eur pasty_ppp_usd mer_usd {
+	replace mgvato_`v' = mgvato_`v' /1000000000
+	replace mgsrgo_`v' = mgsrgo_`v' /1000000000
+	replace mgsrco_`v' = mgsrco_`v' /1000000000
+	replace mgmxhn_`v' = mgmxhn_`v' /1000000000
+	replace mgsrhn_`v' = mgsrhn_`v' /1000000000
+}
+
+
+merge m:1 region1 using "$work_data/import-region-codes-output.dta", nogen keep(master match) keepusing(shortname)
+
+sort order
+
+
+
+preserve
+	keep  shortname *pasty_ppp_eur*
+	order shortname  mgvato_pasty_ppp_eur mgvato_pasty_ppp_eur_gdp mgsrgo_pasty_ppp_eur mgsrco_pasty_ppp_eur mgmxhn_pasty_ppp_eur mgsrhn_pasty_ppp_eur k_shr_pasty_ppp_eur_gvato mgsrgo_pasty_ppp_eur_gvago mgsrco_pasty_ppp_eur_gvaco mgmxhn_pasty_ppp_eur_gvahn mgsrhn_pasty_ppp_eur_gvahn
+	
+
+	export excel using "$output", sheet("DataT16a", modify) cell(B5) keepcellfmt
+restore
+
+preserve
+	keep  shortname *pasty_ppp_usd*
+	order shortname  mgvato_pasty_ppp_usd mgvato_pasty_ppp_usd_gdp mgsrgo_pasty_ppp_usd mgsrco_pasty_ppp_usd mgmxhn_pasty_ppp_usd mgsrhn_pasty_ppp_usd k_shr_pasty_ppp_usd_gvato mgsrgo_pasty_ppp_usd_gvago mgsrco_pasty_ppp_usd_gvaco mgmxhn_pasty_ppp_usd_gvahn mgsrhn_pasty_ppp_usd_gvahn
+	
+
+
+	export excel using "$output", sheet("DataT16b", modify) cell(B5) keepcellfmt
+restore
+
+preserve
+	keep  shortname *mer_eur*
+	order shortname mgvato_mer_eur mgvato_mer_eur_gdp mgsrgo_mer_eur mgsrco_mer_eur mgmxhn_mer_eur mgsrhn_mer_eur k_shr_mer_eur_gvato mgsrgo_mer_eur_gvago mgsrco_mer_eur_gvaco mgmxhn_mer_eur_gvahn mgsrhn_mer_eur_gvahn
+	
+
+	
+
+	export excel using "$output", sheet("DataT16c", modify) cell(B5) keepcellfmt
+restore
+
+preserve
+	keep  shortname *mer_usd*
+	order shortname mgvato_mer_usd mgvato_mer_usd_gdp mgsrgo_mer_usd mgsrco_mer_usd mgmxhn_mer_usd mgsrhn_mer_usd k_shr_mer_usd_gvato mgsrgo_mer_usd_gvago mgsrco_mer_usd_gvaco mgmxhn_mer_usd_gvahn mgsrhn_mer_usd_gvahn
+	
+
+
+	export excel using "$output", sheet("DataT16d", modify) cell(B5) keepcellfmt
+restore
 
 
 

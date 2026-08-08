@@ -31,7 +31,7 @@ rename valuexlcusx999i exc_usd //PPP USD
 
 save "$work_data/ppp.dta", replace
 
-global variables "npopul anninc mnninc mnnfin xlceux xlcusx xlcyux mndpro mncanx mpinnx mcomnx mtaxnx mscinx inyixx mnwnxa mgdpro mtbnnx  mtbxrx mtbmpx mrevgo mretgo mexpgo mntrgr mheage meduge msopge mpsugo minpgo xlceup xlcusp xlcyup mtgnnx mtgxrx mtgmpx mtsnnx mtsxrx mtsmpx mscrnx msconx mscgnx"
+global variables "npopul anninc mnninc mnnfin xlceux xlcusx xlcyux mndpro mncanx mpinnx mcomnx mtaxnx mscinx inyixx mnwnxa mgdpro mtbnnx  mtbxrx mtbmpx mrevgo mretgo mexpgo mntrgr mheage meduge msopge mpsugo minpgo xlceup xlcusp xlcyup mtgnnx mtgxrx mtgmpx mtsnnx mtsxrx mtsmpx mscrnx msconx mscgnx mconfc mnwnfa mnwhou mnwbus mgsrgo mgsrco mgmxhn mgsrhn mgvato mgvago mgvaco mgvahn"
 
 *Import data series from 1970 to 2023 
 foreach v in  $variables{
@@ -44,6 +44,7 @@ foreach v in  $variables{
 }
 
 u "`var_tab'", clear 
+drop data_quality
 drop if strpos(country,"OK") | strpos(country,"OL")
 assert percentile=="p0p100"
 drop percentile age pop
@@ -81,7 +82,7 @@ drop marked
 *generate double mnninc999i_excusd = mnninc999i/excusd			= mnninc
 *generate double mnninc999i_nomusx = (mnninc999i*inyixx)/xlcusx	= mnninc_mer_usd
 
-foreach v in mndpro mnnfin mgdpro mnwnxa mnninc mscrnx mscgnx msconx mncanx mpinnx mtbnnx mcomnx mtaxnx mscinx { // mscrnx msconx mscgnx {
+foreach v in mndpro mnnfin mgdpro mnwnxa mnninc mscrnx mscgnx msconx mncanx mpinnx mtbnnx mcomnx mtaxnx mscinx mconfc mnwnfa mnwhou mnwbus mgsrgo mgsrco mgmxhn mgsrhn  mgvato mgvago mgvaco mgvahn{ // mscrnx msconx mscgnx {
 	*Convert to current USD
 	gen `v'_mer_usd		= (inyixx*`v')/xlcusx // **Numerator inyusx
 	gen `v'_mer_eur		= (inyixx*`v')/xlceux // **Numerator inyeux
@@ -93,7 +94,7 @@ foreach v in mndpro mnnfin mgdpro mnwnxa mnninc mscrnx mscgnx msconx mncanx mpin
 	
 }
 
-foreach v in mndpro mnnfin mgdpro mnwnxa mnninc mscrnx mscgnx msconx mncanx mpinnx mcomnx mtbnnx mtaxnx mscinx { // mscrnx msconx mscgnx {
+foreach v in mndpro mnnfin mgdpro mnwnxa mnninc mscrnx mscgnx msconx mncanx mpinnx mcomnx mtbnnx mtaxnx mscinx mconfc mnwnfa mnwhou mnwbus mgsrgo mgsrco mgmxhn mgsrhn  mgvato mgvago mgvaco mgvahn{ // mscrnx msconx mscgnx {
 	*Convert to current USD $year_prev
 	gen `v'_pasty_ppp_usd_cur = (inyixx*`v')/ppp_usd  
 	gen `v'_pasty_ppp_eur_cur = (inyixx*`v')/ppp_eur  

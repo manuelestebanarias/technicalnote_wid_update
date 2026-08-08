@@ -66,11 +66,12 @@ gen mpinnx_ppp_pasty_usd=(/*nipi**/mpinnx)/ppp_usd
 
 
 
-order countryname mnninc_pasty_ppp_eur_pc percentile region1   mnninc_pasty_ppp_eur npopul country mnnfin_pasty_ppp_eur mpinnx_pasty_ppp_eur mcomnx_pasty_ppp_eur mnwnxa_pasty_ppp_eur /// 
-mndpro_pasty_ppp_eur mgdpro_pasty_ppp_eur 	PPP_to_MER_pasty_EUR PPP_to_MER_pasty_USD PPP_to_MER_2021_EUR PPP_to_MER_2021_USD nnfin_ndinc scinx_ndinc	
+order countryname mnninc_pasty_ppp_eur_pc percentile region1  mnninc_pasty_ppp_eur npopul country mnnfin_pasty_ppp_eur mpinnx_pasty_ppp_eur mcomnx_pasty_ppp_eur mnwnxa_pasty_ppp_eur /// 
+mndpro_pasty_ppp_eur mgdpro_pasty_ppp_eur mgdpro_pasty_ppp_usd mgdpro_mer_eur mgdpro_mer_usd PPP_to_MER_pasty_EUR PPP_to_MER_pasty_USD PPP_to_MER_2021_EUR PPP_to_MER_2021_USD nnfin_ndinc scinx_ndinc	
 
-keep countryname mnninc_pasty_ppp_eur_pc percentile region1    mnninc_pasty_ppp_eur npopul country mnnfin_pasty_ppp_eur mpinnx_pasty_ppp_eur mcomnx_pasty_ppp_eur mnwnxa_pasty_ppp_eur /// 
-mndpro_pasty_ppp_eur mgdpro_pasty_ppp_eur 	PPP_to_MER_pasty_EUR PPP_to_MER_pasty_USD PPP_to_MER_2021_EUR PPP_to_MER_2021_USD nnfin_ndinc scinx_ndinc
+keep countryname mnninc_pasty_ppp_eur_pc percentile region1  mnninc_pasty_ppp_eur npopul country mnnfin_pasty_ppp_eur mpinnx_pasty_ppp_eur mcomnx_pasty_ppp_eur mnwnxa_pasty_ppp_eur /// 
+mndpro_pasty_ppp_eur mgdpro_pasty_ppp_eur mgdpro_pasty_ppp_usd mgdpro_mer_eur mgdpro_mer_usd PPP_to_MER_pasty_EUR PPP_to_MER_pasty_USD PPP_to_MER_2021_EUR PPP_to_MER_2021_USD nnfin_ndinc scinx_ndinc	
+
 
 
 *Export 
